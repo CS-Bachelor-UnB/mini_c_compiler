@@ -1,5 +1,6 @@
+#line 2 "./src/aux/lex.yy.c"
 
-#line 3 "lex.yy.c"
+#line 4 "./src/aux/lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -530,7 +531,7 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "scanner.lex"
+#line 1 "./src/scanner.l"
 /* File: scanner.lex
  * Author: Amr Gaber
  * Created: 24/9/2010
@@ -538,19 +539,19 @@ char *yytext;
  * Purpose: Tokenizer for parser.yacc. Used with the makefile to construct
  * 				the C-- compiler.
  */
-#line 10 "scanner.lex"
+#line 10 "./src/scanner.l"
 #include "utilities.h"
 #include "symbolTable.h"
 #include "syntaxTree.h"
 #include "code.h"
 #include "y.tab.h"
 extern int errorCount;
-#line 549 "lex.yy.c"
+#line 550 "./src/aux/lex.yy.c"
 /* Citation: This comment state machine was found in Flex & Bison written by 
  * John Levine, published by O'Reilly. Pages 93 & 94.
  */
 
-#line 554 "lex.yy.c"
+#line 555 "./src/aux/lex.yy.c"
 
 #define INITIAL 0
 #define COMMENT 1
@@ -768,10 +769,10 @@ YY_DECL
 		}
 
 	{
-#line 33 "scanner.lex"
+#line 33 "./src/scanner.l"
 
 
-#line 775 "lex.yy.c"
+#line 776 "./src/aux/lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -840,22 +841,22 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 35 "scanner.lex"
+#line 35 "./src/scanner.l"
 { BEGIN(COMMENT); }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 36 "scanner.lex"
+#line 36 "./src/scanner.l"
 { BEGIN(INITIAL); }
 	YY_BREAK
 case 3:
 /* rule 3 can match eol */
 YY_RULE_SETUP
-#line 37 "scanner.lex"
+#line 37 "./src/scanner.l"
 
 	YY_BREAK
 case YY_STATE_EOF(COMMENT):
-#line 38 "scanner.lex"
+#line 38 "./src/scanner.l"
 { fprintf(stderr, 
 							"SYNTAX ERROR: Unexpected EOF inside comment\n");
  					  exit(1);
@@ -863,183 +864,183 @@ case YY_STATE_EOF(COMMENT):
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 43 "scanner.lex"
+#line 43 "./src/scanner.l"
 return(CHAR);
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 44 "scanner.lex"
+#line 44 "./src/scanner.l"
 return(INT);
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 45 "scanner.lex"
+#line 45 "./src/scanner.l"
 return(VOID);
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 46 "scanner.lex"
+#line 46 "./src/scanner.l"
 return(IF);
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 47 "scanner.lex"
+#line 47 "./src/scanner.l"
 return(ELSE);
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 48 "scanner.lex"
+#line 48 "./src/scanner.l"
 return(WHILE);
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 49 "scanner.lex"
+#line 49 "./src/scanner.l"
 return(FOR);
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 50 "scanner.lex"
+#line 50 "./src/scanner.l"
 return(RETURN);
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 51 "scanner.lex"
+#line 51 "./src/scanner.l"
 return(EXTERN);
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 52 "scanner.lex"
+#line 52 "./src/scanner.l"
 return(DBLEQ);
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 53 "scanner.lex"
+#line 53 "./src/scanner.l"
 return(NOTEQ);
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 54 "scanner.lex"
+#line 54 "./src/scanner.l"
 return(LTEQ);
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 55 "scanner.lex"
+#line 55 "./src/scanner.l"
 return(GTEQ);
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 56 "scanner.lex"
+#line 56 "./src/scanner.l"
 return(LOGICAND);
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 57 "scanner.lex"
+#line 57 "./src/scanner.l"
 return(LOGICOR);
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 58 "scanner.lex"
+#line 58 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 59 "scanner.lex"
+#line 59 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 60 "scanner.lex"
+#line 60 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 61 "scanner.lex"
+#line 61 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 62 "scanner.lex"
+#line 62 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 63 "scanner.lex"
+#line 63 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 64 "scanner.lex"
+#line 64 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 65 "scanner.lex"
+#line 65 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 66 "scanner.lex"
+#line 66 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 67 "scanner.lex"
+#line 67 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 68 "scanner.lex"
+#line 68 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 69 "scanner.lex"
+#line 69 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 70 "scanner.lex"
+#line 70 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 71 "scanner.lex"
+#line 71 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 72 "scanner.lex"
+#line 72 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 73 "scanner.lex"
+#line 73 "./src/scanner.l"
 return(yytext[0]);
 	YY_BREAK
 case 35:
 /* rule 35 can match eol */
 YY_RULE_SETUP
-#line 74 "scanner.lex"
+#line 74 "./src/scanner.l"
 ;
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 75 "scanner.lex"
+#line 75 "./src/scanner.l"
 ;
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 76 "scanner.lex"
+#line 76 "./src/scanner.l"
 { yylval.string = strdup(yytext); } return(ID);
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 77 "scanner.lex"
+#line 77 "./src/scanner.l"
 { yylval.integer = atoi(yytext); } return(INTCON);
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 78 "scanner.lex"
+#line 78 "./src/scanner.l"
 { 
 					if (yytext[1] == '\\') {
 						if (yytext[2] == 'n')
@@ -1053,21 +1054,21 @@ YY_RULE_SETUP
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 88 "scanner.lex"
+#line 88 "./src/scanner.l"
 { yylval.string = strdup(yytext); } return(STRCON);
 	YY_BREAK
 case 41:
 /* rule 41 can match eol */
 YY_RULE_SETUP
-#line 89 "scanner.lex"
+#line 89 "./src/scanner.l"
 return(OTHER);
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 91 "scanner.lex"
+#line 91 "./src/scanner.l"
 ECHO;
 	YY_BREAK
-#line 1071 "lex.yy.c"
+#line 1072 "./src/aux/lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2084,6 +2085,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 91 "scanner.lex"
+#line 91 "./src/scanner.l"
 
 
