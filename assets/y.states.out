@@ -1,0 +1,3540 @@
+Terminals unused in grammar
+
+    OTHER
+
+
+State 167 conflicts: 1 shift/reduce
+
+
+Grammar
+
+    0 $accept: program $end
+
+    1 program: program declaration ';'
+    2        | program function
+    3        | program declaration error
+    4        | error ';'
+    5        | %empty
+
+    6 declaration: type varDcl multiVarDcl
+    7            | storeExtern type storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt
+    8            | type storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt
+    9            | storeExtern storeVoid storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt
+   10            | storeVoid storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt
+
+   11 storeFID: ID
+
+   12 storeID: ID
+
+   13 storeExtern: EXTERN
+
+   14 storeVoid: VOID
+
+   15 makeProt: %empty
+
+   16 multiProtDcl: multiProtDcl ',' makeProt storeFID '(' insertFunc paramTypes ')'
+   17             | %empty
+
+   18 multiVarDcl: multiVarDcl ',' varDcl
+   19            | %empty
+
+   20 varDcl: ID
+   21       | ID '[' INTCON ']'
+
+   22 type: CHAR
+   23     | INT
+
+   24 initParam: %empty
+
+   25 paramTypes: initParam VOID
+   26           | initParam arrayTypeOpt multiParam
+
+   27 storePType: CHAR
+   28           | INT
+
+   29 arrayTypeOpt: storePType ID
+   30             | storePType ID '[' ']'
+
+   31 multiParam: multiParam ',' arrayTypeOpt
+   32           | %empty
+
+   33 insertFunc: %empty
+
+   34 function: type storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl statementOpt '}'
+   35         | storeVoid storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl statementOpt '}'
+
+   36 multiTypeDcl: multiTypeDcl type varDcl multiVarDcl ';'
+   37             | multiTypeDcl type error ';'
+   38             | %empty
+
+   39 statement: IF '(' expr ')' statement
+   40          | IF '(' expr ')' statement ELSE statement
+   41          | WHILE '(' expr ')' statement
+   42          | FOR '(' assgOpt ';' exprOpt ';' assgOpt ')' statement
+   43          | RETURN expr ';'
+   44          | RETURN ';'
+   45          | assignment ';'
+   46          | storeID '(' ')' ';'
+
+   47 $@1: %empty
+
+   48 statement: storeID '(' $@1 args multiExprOpt ')' ';'
+   49          | '{' statementOpt '}'
+   50          | ';'
+   51          | error ';'
+
+   52 statementOpt: statementOpt statement
+   53             | %empty
+
+   54 exprOpt: expr
+   55        | %empty
+
+   56 assignment: storeID '=' expr
+   57           | storeID '[' expr ']' '=' expr
+
+   58 assgOpt: assignment
+   59        | %empty
+
+   60 expr: '-' expr
+   61     | '!' expr
+   62     | expr '+' expr
+   63     | expr '-' expr
+   64     | expr '*' expr
+   65     | expr '/' expr
+   66     | expr DBLEQ expr
+   67     | expr NOTEQ expr
+   68     | expr LTEQ expr
+   69     | expr '<' expr
+   70     | expr GTEQ expr
+   71     | expr '>' expr
+   72     | expr LOGICAND expr
+   73     | expr LOGICOR expr
+
+   74 $@2: %empty
+
+   75 expr: ID $@2 multiFuncOpt
+   76     | '(' expr ')'
+   77     | INTCON
+   78     | CHARCON
+   79     | STRCON
+
+   80 multiFuncOpt: '(' ')'
+
+   81 $@3: %empty
+
+   82 multiFuncOpt: '(' $@3 args multiExprOpt ')'
+
+   83 $@4: %empty
+
+   84 multiFuncOpt: '[' $@4 expr ']'
+   85             | %empty
+
+   86 args: expr
+
+   87 multiExprOpt: multiExprOpt ',' args
+   88             | %empty
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    '!' (33) 61
+    '(' (40) 7 8 9 10 16 34 35 39 40 41 42 46 48 76 80 82
+    ')' (41) 7 8 9 10 16 34 35 39 40 41 42 46 48 76 80 82
+    '*' (42) 64
+    '+' (43) 62
+    ',' (44) 16 18 31 87
+    '-' (45) 60 63
+    '/' (47) 65
+    ';' (59) 1 4 36 37 42 43 44 45 46 48 50 51
+    '<' (60) 69
+    '=' (61) 56 57
+    '>' (62) 71
+    '[' (91) 21 30 57 84
+    ']' (93) 21 30 57 84
+    '{' (123) 34 35 49
+    '}' (125) 34 35 49
+    error (256) 3 4 37 51
+    ID <string> (258) 11 12 20 21 29 30 75
+    INTCON <integer> (259) 21 77
+    CHARCON <character> (260) 78
+    STRCON <string> (261) 79
+    CHAR (262) 22 27
+    INT (263) 23 28
+    VOID (264) 14 25
+    IF (265) 39 40
+    ELSE (266) 40
+    WHILE (267) 41
+    FOR (268) 42
+    RETURN (269) 43 44
+    EXTERN (270) 13
+    UMINUS (271)
+    DBLEQ (272) 66
+    NOTEQ (273) 67
+    LTEQ (274) 68
+    GTEQ (275) 70
+    LOGICAND (276) 72
+    LOGICOR (277) 73
+    OTHER (278)
+
+
+Nonterminals, with rules where they appear
+
+    $accept (40)
+        on left: 0
+    program (41)
+        on left: 1 2 3 4 5
+        on right: 0 1 2 3
+    declaration (42)
+        on left: 6 7 8 9 10
+        on right: 1 3
+    storeFID (43)
+        on left: 11
+        on right: 7 8 9 10 16 34 35
+    storeID <string> (44)
+        on left: 12
+        on right: 46 48 56 57
+    storeExtern (45)
+        on left: 13
+        on right: 7 9
+    storeVoid (46)
+        on left: 14
+        on right: 9 10 35
+    makeProt (47)
+        on left: 15
+        on right: 7 8 9 10 16
+    multiProtDcl (48)
+        on left: 16 17
+        on right: 7 8 9 10 16
+    multiVarDcl <tree> (49)
+        on left: 18 19
+        on right: 6 18 36
+    varDcl <tree> (50)
+        on left: 20 21
+        on right: 6 18 36
+    type (51)
+        on left: 22 23
+        on right: 6 7 8 34 36 37
+    initParam (52)
+        on left: 24
+        on right: 25 26
+    paramTypes <tree> (53)
+        on left: 25 26
+        on right: 7 8 9 10 16 34 35
+    storePType (54)
+        on left: 27 28
+        on right: 29 30
+    arrayTypeOpt <tree> (55)
+        on left: 29 30
+        on right: 26 31
+    multiParam <tree> (56)
+        on left: 31 32
+        on right: 26 31
+    insertFunc (57)
+        on left: 33
+        on right: 7 8 9 10 16 34 35
+    function (58)
+        on left: 34 35
+        on right: 2
+    multiTypeDcl <tree> (59)
+        on left: 36 37 38
+        on right: 34 35 36 37
+    statement <tree> (60)
+        on left: 39 40 41 42 43 44 45 46 48 49 50 51
+        on right: 39 40 41 42 52
+    $@1 (61)
+        on left: 47
+        on right: 48
+    statementOpt <tree> (62)
+        on left: 52 53
+        on right: 34 35 49 52
+    exprOpt <exprReturn> (63)
+        on left: 54 55
+        on right: 42
+    assignment <tree> (64)
+        on left: 56 57
+        on right: 45 58
+    assgOpt <tree> (65)
+        on left: 58 59
+        on right: 42
+    expr <exprReturn> (66)
+        on left: 60 61 62 63 64 65 66 67 68 69 70 71 72 73 75 76 77 78 79
+        on right: 39 40 41 43 54 56 57 60 61 62 63 64 65 66 67 68 69 70 71 72 73 76 84 86
+    $@2 (67)
+        on left: 74
+        on right: 75
+    multiFuncOpt <exprReturn> (68)
+        on left: 80 82 84 85
+        on right: 75
+    $@3 (69)
+        on left: 81
+        on right: 82
+    $@4 (70)
+        on left: 83
+        on right: 84
+    args <tree> (71)
+        on left: 86
+        on right: 48 82 87
+    multiExprOpt <tree> (72)
+        on left: 87 88
+        on right: 48 82 87
+
+
+State 0
+
+    0 $accept: . program $end
+    1 program: . program declaration ';'
+    2        | . program function
+    3        | . program declaration error
+    4        | . error ';'
+    5        | . %empty  [$end, CHAR, INT, VOID, EXTERN]
+
+    error  shift, and go to state 1
+
+    $end    reduce using rule 5 (program)
+    CHAR    reduce using rule 5 (program)
+    INT     reduce using rule 5 (program)
+    VOID    reduce using rule 5 (program)
+    EXTERN  reduce using rule 5 (program)
+
+    program  go to state 2
+
+
+State 1
+
+    4 program: error . ';'
+
+    ';'  shift, and go to state 3
+
+
+State 2
+
+    0 $accept: program . $end
+    1 program: program . declaration ';'
+    2        | program . function
+    3        | program . declaration error
+    6 declaration: . type varDcl multiVarDcl
+    7            | . storeExtern type storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt
+    8            | . type storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt
+    9            | . storeExtern storeVoid storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt
+   10            | . storeVoid storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt
+   13 storeExtern: . EXTERN
+   14 storeVoid: . VOID
+   22 type: . CHAR
+   23     | . INT
+   34 function: . type storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl statementOpt '}'
+   35         | . storeVoid storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl statementOpt '}'
+
+    $end    shift, and go to state 4
+    CHAR    shift, and go to state 5
+    INT     shift, and go to state 6
+    VOID    shift, and go to state 7
+    EXTERN  shift, and go to state 8
+
+    declaration  go to state 9
+    storeExtern  go to state 10
+    storeVoid    go to state 11
+    type         go to state 12
+    function     go to state 13
+
+
+State 3
+
+    4 program: error ';' .
+
+    $default  reduce using rule 4 (program)
+
+
+State 4
+
+    0 $accept: program $end .
+
+    $default  accept
+
+
+State 5
+
+   22 type: CHAR .
+
+    $default  reduce using rule 22 (type)
+
+
+State 6
+
+   23 type: INT .
+
+    $default  reduce using rule 23 (type)
+
+
+State 7
+
+   14 storeVoid: VOID .
+
+    $default  reduce using rule 14 (storeVoid)
+
+
+State 8
+
+   13 storeExtern: EXTERN .
+
+    $default  reduce using rule 13 (storeExtern)
+
+
+State 9
+
+    1 program: program declaration . ';'
+    3        | program declaration . error
+
+    error  shift, and go to state 14
+    ';'    shift, and go to state 15
+
+
+State 10
+
+    7 declaration: storeExtern . type storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt
+    9            | storeExtern . storeVoid storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt
+   14 storeVoid: . VOID
+   22 type: . CHAR
+   23     | . INT
+
+    CHAR  shift, and go to state 5
+    INT   shift, and go to state 6
+    VOID  shift, and go to state 7
+
+    storeVoid  go to state 16
+    type       go to state 17
+
+
+State 11
+
+   10 declaration: storeVoid . storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt
+   11 storeFID: . ID
+   35 function: storeVoid . storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl statementOpt '}'
+
+    ID  shift, and go to state 18
+
+    storeFID  go to state 19
+
+
+State 12
+
+    6 declaration: type . varDcl multiVarDcl
+    8            | type . storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt
+   11 storeFID: . ID
+   20 varDcl: . ID
+   21       | . ID '[' INTCON ']'
+   34 function: type . storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl statementOpt '}'
+
+    ID  shift, and go to state 20
+
+    storeFID  go to state 21
+    varDcl    go to state 22
+
+
+State 13
+
+    2 program: program function .
+
+    $default  reduce using rule 2 (program)
+
+
+State 14
+
+    3 program: program declaration error .
+
+    $default  reduce using rule 3 (program)
+
+
+State 15
+
+    1 program: program declaration ';' .
+
+    $default  reduce using rule 1 (program)
+
+
+State 16
+
+    9 declaration: storeExtern storeVoid . storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt
+   11 storeFID: . ID
+
+    ID  shift, and go to state 18
+
+    storeFID  go to state 23
+
+
+State 17
+
+    7 declaration: storeExtern type . storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt
+   11 storeFID: . ID
+
+    ID  shift, and go to state 18
+
+    storeFID  go to state 24
+
+
+State 18
+
+   11 storeFID: ID .
+
+    $default  reduce using rule 11 (storeFID)
+
+
+State 19
+
+   10 declaration: storeVoid storeFID . '(' insertFunc paramTypes ')' multiProtDcl makeProt
+   35 function: storeVoid storeFID . '(' insertFunc paramTypes ')' '{' multiTypeDcl statementOpt '}'
+
+    '('  shift, and go to state 25
+
+
+State 20
+
+   11 storeFID: ID .  ['(']
+   20 varDcl: ID .  [error, ';', ',']
+   21       | ID . '[' INTCON ']'
+
+    '['  shift, and go to state 26
+
+    '('       reduce using rule 11 (storeFID)
+    $default  reduce using rule 20 (varDcl)
+
+
+State 21
+
+    8 declaration: type storeFID . '(' insertFunc paramTypes ')' multiProtDcl makeProt
+   34 function: type storeFID . '(' insertFunc paramTypes ')' '{' multiTypeDcl statementOpt '}'
+
+    '('  shift, and go to state 27
+
+
+State 22
+
+    6 declaration: type varDcl . multiVarDcl
+   18 multiVarDcl: . multiVarDcl ',' varDcl
+   19            | . %empty
+
+    $default  reduce using rule 19 (multiVarDcl)
+
+    multiVarDcl  go to state 28
+
+
+State 23
+
+    9 declaration: storeExtern storeVoid storeFID . '(' insertFunc paramTypes ')' multiProtDcl makeProt
+
+    '('  shift, and go to state 29
+
+
+State 24
+
+    7 declaration: storeExtern type storeFID . '(' insertFunc paramTypes ')' multiProtDcl makeProt
+
+    '('  shift, and go to state 30
+
+
+State 25
+
+   10 declaration: storeVoid storeFID '(' . insertFunc paramTypes ')' multiProtDcl makeProt
+   33 insertFunc: . %empty
+   35 function: storeVoid storeFID '(' . insertFunc paramTypes ')' '{' multiTypeDcl statementOpt '}'
+
+    $default  reduce using rule 33 (insertFunc)
+
+    insertFunc  go to state 31
+
+
+State 26
+
+   21 varDcl: ID '[' . INTCON ']'
+
+    INTCON  shift, and go to state 32
+
+
+State 27
+
+    8 declaration: type storeFID '(' . insertFunc paramTypes ')' multiProtDcl makeProt
+   33 insertFunc: . %empty
+   34 function: type storeFID '(' . insertFunc paramTypes ')' '{' multiTypeDcl statementOpt '}'
+
+    $default  reduce using rule 33 (insertFunc)
+
+    insertFunc  go to state 33
+
+
+State 28
+
+    6 declaration: type varDcl multiVarDcl .  [error, ';']
+   18 multiVarDcl: multiVarDcl . ',' varDcl
+
+    ','  shift, and go to state 34
+
+    $default  reduce using rule 6 (declaration)
+
+
+State 29
+
+    9 declaration: storeExtern storeVoid storeFID '(' . insertFunc paramTypes ')' multiProtDcl makeProt
+   33 insertFunc: . %empty
+
+    $default  reduce using rule 33 (insertFunc)
+
+    insertFunc  go to state 35
+
+
+State 30
+
+    7 declaration: storeExtern type storeFID '(' . insertFunc paramTypes ')' multiProtDcl makeProt
+   33 insertFunc: . %empty
+
+    $default  reduce using rule 33 (insertFunc)
+
+    insertFunc  go to state 36
+
+
+State 31
+
+   10 declaration: storeVoid storeFID '(' insertFunc . paramTypes ')' multiProtDcl makeProt
+   24 initParam: . %empty
+   25 paramTypes: . initParam VOID
+   26           | . initParam arrayTypeOpt multiParam
+   35 function: storeVoid storeFID '(' insertFunc . paramTypes ')' '{' multiTypeDcl statementOpt '}'
+
+    $default  reduce using rule 24 (initParam)
+
+    initParam   go to state 37
+    paramTypes  go to state 38
+
+
+State 32
+
+   21 varDcl: ID '[' INTCON . ']'
+
+    ']'  shift, and go to state 39
+
+
+State 33
+
+    8 declaration: type storeFID '(' insertFunc . paramTypes ')' multiProtDcl makeProt
+   24 initParam: . %empty
+   25 paramTypes: . initParam VOID
+   26           | . initParam arrayTypeOpt multiParam
+   34 function: type storeFID '(' insertFunc . paramTypes ')' '{' multiTypeDcl statementOpt '}'
+
+    $default  reduce using rule 24 (initParam)
+
+    initParam   go to state 37
+    paramTypes  go to state 40
+
+
+State 34
+
+   18 multiVarDcl: multiVarDcl ',' . varDcl
+   20 varDcl: . ID
+   21       | . ID '[' INTCON ']'
+
+    ID  shift, and go to state 41
+
+    varDcl  go to state 42
+
+
+State 35
+
+    9 declaration: storeExtern storeVoid storeFID '(' insertFunc . paramTypes ')' multiProtDcl makeProt
+   24 initParam: . %empty
+   25 paramTypes: . initParam VOID
+   26           | . initParam arrayTypeOpt multiParam
+
+    $default  reduce using rule 24 (initParam)
+
+    initParam   go to state 37
+    paramTypes  go to state 43
+
+
+State 36
+
+    7 declaration: storeExtern type storeFID '(' insertFunc . paramTypes ')' multiProtDcl makeProt
+   24 initParam: . %empty
+   25 paramTypes: . initParam VOID
+   26           | . initParam arrayTypeOpt multiParam
+
+    $default  reduce using rule 24 (initParam)
+
+    initParam   go to state 37
+    paramTypes  go to state 44
+
+
+State 37
+
+   25 paramTypes: initParam . VOID
+   26           | initParam . arrayTypeOpt multiParam
+   27 storePType: . CHAR
+   28           | . INT
+   29 arrayTypeOpt: . storePType ID
+   30             | . storePType ID '[' ']'
+
+    CHAR  shift, and go to state 45
+    INT   shift, and go to state 46
+    VOID  shift, and go to state 47
+
+    storePType    go to state 48
+    arrayTypeOpt  go to state 49
+
+
+State 38
+
+   10 declaration: storeVoid storeFID '(' insertFunc paramTypes . ')' multiProtDcl makeProt
+   35 function: storeVoid storeFID '(' insertFunc paramTypes . ')' '{' multiTypeDcl statementOpt '}'
+
+    ')'  shift, and go to state 50
+
+
+State 39
+
+   21 varDcl: ID '[' INTCON ']' .
+
+    $default  reduce using rule 21 (varDcl)
+
+
+State 40
+
+    8 declaration: type storeFID '(' insertFunc paramTypes . ')' multiProtDcl makeProt
+   34 function: type storeFID '(' insertFunc paramTypes . ')' '{' multiTypeDcl statementOpt '}'
+
+    ')'  shift, and go to state 51
+
+
+State 41
+
+   20 varDcl: ID .  [error, ';', ',']
+   21       | ID . '[' INTCON ']'
+
+    '['  shift, and go to state 26
+
+    $default  reduce using rule 20 (varDcl)
+
+
+State 42
+
+   18 multiVarDcl: multiVarDcl ',' varDcl .
+
+    $default  reduce using rule 18 (multiVarDcl)
+
+
+State 43
+
+    9 declaration: storeExtern storeVoid storeFID '(' insertFunc paramTypes . ')' multiProtDcl makeProt
+
+    ')'  shift, and go to state 52
+
+
+State 44
+
+    7 declaration: storeExtern type storeFID '(' insertFunc paramTypes . ')' multiProtDcl makeProt
+
+    ')'  shift, and go to state 53
+
+
+State 45
+
+   27 storePType: CHAR .
+
+    $default  reduce using rule 27 (storePType)
+
+
+State 46
+
+   28 storePType: INT .
+
+    $default  reduce using rule 28 (storePType)
+
+
+State 47
+
+   25 paramTypes: initParam VOID .
+
+    $default  reduce using rule 25 (paramTypes)
+
+
+State 48
+
+   29 arrayTypeOpt: storePType . ID
+   30             | storePType . ID '[' ']'
+
+    ID  shift, and go to state 54
+
+
+State 49
+
+   26 paramTypes: initParam arrayTypeOpt . multiParam
+   31 multiParam: . multiParam ',' arrayTypeOpt
+   32           | . %empty
+
+    $default  reduce using rule 32 (multiParam)
+
+    multiParam  go to state 55
+
+
+State 50
+
+   10 declaration: storeVoid storeFID '(' insertFunc paramTypes ')' . multiProtDcl makeProt
+   16 multiProtDcl: . multiProtDcl ',' makeProt storeFID '(' insertFunc paramTypes ')'
+   17             | . %empty  [error, ';', ',']
+   35 function: storeVoid storeFID '(' insertFunc paramTypes ')' . '{' multiTypeDcl statementOpt '}'
+
+    '{'  shift, and go to state 56
+
+    $default  reduce using rule 17 (multiProtDcl)
+
+    multiProtDcl  go to state 57
+
+
+State 51
+
+    8 declaration: type storeFID '(' insertFunc paramTypes ')' . multiProtDcl makeProt
+   16 multiProtDcl: . multiProtDcl ',' makeProt storeFID '(' insertFunc paramTypes ')'
+   17             | . %empty  [error, ';', ',']
+   34 function: type storeFID '(' insertFunc paramTypes ')' . '{' multiTypeDcl statementOpt '}'
+
+    '{'  shift, and go to state 58
+
+    $default  reduce using rule 17 (multiProtDcl)
+
+    multiProtDcl  go to state 59
+
+
+State 52
+
+    9 declaration: storeExtern storeVoid storeFID '(' insertFunc paramTypes ')' . multiProtDcl makeProt
+   16 multiProtDcl: . multiProtDcl ',' makeProt storeFID '(' insertFunc paramTypes ')'
+   17             | . %empty
+
+    $default  reduce using rule 17 (multiProtDcl)
+
+    multiProtDcl  go to state 60
+
+
+State 53
+
+    7 declaration: storeExtern type storeFID '(' insertFunc paramTypes ')' . multiProtDcl makeProt
+   16 multiProtDcl: . multiProtDcl ',' makeProt storeFID '(' insertFunc paramTypes ')'
+   17             | . %empty
+
+    $default  reduce using rule 17 (multiProtDcl)
+
+    multiProtDcl  go to state 61
+
+
+State 54
+
+   29 arrayTypeOpt: storePType ID .  [')', ',']
+   30             | storePType ID . '[' ']'
+
+    '['  shift, and go to state 62
+
+    $default  reduce using rule 29 (arrayTypeOpt)
+
+
+State 55
+
+   26 paramTypes: initParam arrayTypeOpt multiParam .  [')']
+   31 multiParam: multiParam . ',' arrayTypeOpt
+
+    ','  shift, and go to state 63
+
+    $default  reduce using rule 26 (paramTypes)
+
+
+State 56
+
+   35 function: storeVoid storeFID '(' insertFunc paramTypes ')' '{' . multiTypeDcl statementOpt '}'
+   36 multiTypeDcl: . multiTypeDcl type varDcl multiVarDcl ';'
+   37             | . multiTypeDcl type error ';'
+   38             | . %empty
+
+    $default  reduce using rule 38 (multiTypeDcl)
+
+    multiTypeDcl  go to state 64
+
+
+State 57
+
+   10 declaration: storeVoid storeFID '(' insertFunc paramTypes ')' multiProtDcl . makeProt
+   15 makeProt: . %empty  [error, ';']
+   16 multiProtDcl: multiProtDcl . ',' makeProt storeFID '(' insertFunc paramTypes ')'
+
+    ','  shift, and go to state 65
+
+    $default  reduce using rule 15 (makeProt)
+
+    makeProt  go to state 66
+
+
+State 58
+
+   34 function: type storeFID '(' insertFunc paramTypes ')' '{' . multiTypeDcl statementOpt '}'
+   36 multiTypeDcl: . multiTypeDcl type varDcl multiVarDcl ';'
+   37             | . multiTypeDcl type error ';'
+   38             | . %empty
+
+    $default  reduce using rule 38 (multiTypeDcl)
+
+    multiTypeDcl  go to state 67
+
+
+State 59
+
+    8 declaration: type storeFID '(' insertFunc paramTypes ')' multiProtDcl . makeProt
+   15 makeProt: . %empty  [error, ';']
+   16 multiProtDcl: multiProtDcl . ',' makeProt storeFID '(' insertFunc paramTypes ')'
+
+    ','  shift, and go to state 65
+
+    $default  reduce using rule 15 (makeProt)
+
+    makeProt  go to state 68
+
+
+State 60
+
+    9 declaration: storeExtern storeVoid storeFID '(' insertFunc paramTypes ')' multiProtDcl . makeProt
+   15 makeProt: . %empty  [error, ';']
+   16 multiProtDcl: multiProtDcl . ',' makeProt storeFID '(' insertFunc paramTypes ')'
+
+    ','  shift, and go to state 65
+
+    $default  reduce using rule 15 (makeProt)
+
+    makeProt  go to state 69
+
+
+State 61
+
+    7 declaration: storeExtern type storeFID '(' insertFunc paramTypes ')' multiProtDcl . makeProt
+   15 makeProt: . %empty  [error, ';']
+   16 multiProtDcl: multiProtDcl . ',' makeProt storeFID '(' insertFunc paramTypes ')'
+
+    ','  shift, and go to state 65
+
+    $default  reduce using rule 15 (makeProt)
+
+    makeProt  go to state 70
+
+
+State 62
+
+   30 arrayTypeOpt: storePType ID '[' . ']'
+
+    ']'  shift, and go to state 71
+
+
+State 63
+
+   27 storePType: . CHAR
+   28           | . INT
+   29 arrayTypeOpt: . storePType ID
+   30             | . storePType ID '[' ']'
+   31 multiParam: multiParam ',' . arrayTypeOpt
+
+    CHAR  shift, and go to state 45
+    INT   shift, and go to state 46
+
+    storePType    go to state 48
+    arrayTypeOpt  go to state 72
+
+
+State 64
+
+   22 type: . CHAR
+   23     | . INT
+   35 function: storeVoid storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl . statementOpt '}'
+   36 multiTypeDcl: multiTypeDcl . type varDcl multiVarDcl ';'
+   37             | multiTypeDcl . type error ';'
+   52 statementOpt: . statementOpt statement
+   53             | . %empty  [error, ID, IF, WHILE, FOR, RETURN, ';', '{', '}']
+
+    CHAR  shift, and go to state 5
+    INT   shift, and go to state 6
+
+    $default  reduce using rule 53 (statementOpt)
+
+    type          go to state 73
+    statementOpt  go to state 74
+
+
+State 65
+
+   15 makeProt: . %empty
+   16 multiProtDcl: multiProtDcl ',' . makeProt storeFID '(' insertFunc paramTypes ')'
+
+    $default  reduce using rule 15 (makeProt)
+
+    makeProt  go to state 75
+
+
+State 66
+
+   10 declaration: storeVoid storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt .
+
+    $default  reduce using rule 10 (declaration)
+
+
+State 67
+
+   22 type: . CHAR
+   23     | . INT
+   34 function: type storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl . statementOpt '}'
+   36 multiTypeDcl: multiTypeDcl . type varDcl multiVarDcl ';'
+   37             | multiTypeDcl . type error ';'
+   52 statementOpt: . statementOpt statement
+   53             | . %empty  [error, ID, IF, WHILE, FOR, RETURN, ';', '{', '}']
+
+    CHAR  shift, and go to state 5
+    INT   shift, and go to state 6
+
+    $default  reduce using rule 53 (statementOpt)
+
+    type          go to state 73
+    statementOpt  go to state 76
+
+
+State 68
+
+    8 declaration: type storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt .
+
+    $default  reduce using rule 8 (declaration)
+
+
+State 69
+
+    9 declaration: storeExtern storeVoid storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt .
+
+    $default  reduce using rule 9 (declaration)
+
+
+State 70
+
+    7 declaration: storeExtern type storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt .
+
+    $default  reduce using rule 7 (declaration)
+
+
+State 71
+
+   30 arrayTypeOpt: storePType ID '[' ']' .
+
+    $default  reduce using rule 30 (arrayTypeOpt)
+
+
+State 72
+
+   31 multiParam: multiParam ',' arrayTypeOpt .
+
+    $default  reduce using rule 31 (multiParam)
+
+
+State 73
+
+   20 varDcl: . ID
+   21       | . ID '[' INTCON ']'
+   36 multiTypeDcl: multiTypeDcl type . varDcl multiVarDcl ';'
+   37             | multiTypeDcl type . error ';'
+
+    error  shift, and go to state 77
+    ID     shift, and go to state 41
+
+    varDcl  go to state 78
+
+
+State 74
+
+   12 storeID: . ID
+   35 function: storeVoid storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl statementOpt . '}'
+   39 statement: . IF '(' expr ')' statement
+   40          | . IF '(' expr ')' statement ELSE statement
+   41          | . WHILE '(' expr ')' statement
+   42          | . FOR '(' assgOpt ';' exprOpt ';' assgOpt ')' statement
+   43          | . RETURN expr ';'
+   44          | . RETURN ';'
+   45          | . assignment ';'
+   46          | . storeID '(' ')' ';'
+   48          | . storeID '(' $@1 args multiExprOpt ')' ';'
+   49          | . '{' statementOpt '}'
+   50          | . ';'
+   51          | . error ';'
+   52 statementOpt: statementOpt . statement
+   56 assignment: . storeID '=' expr
+   57           | . storeID '[' expr ']' '=' expr
+
+    error   shift, and go to state 79
+    ID      shift, and go to state 80
+    IF      shift, and go to state 81
+    WHILE   shift, and go to state 82
+    FOR     shift, and go to state 83
+    RETURN  shift, and go to state 84
+    ';'     shift, and go to state 85
+    '{'     shift, and go to state 86
+    '}'     shift, and go to state 87
+
+    storeID     go to state 88
+    statement   go to state 89
+    assignment  go to state 90
+
+
+State 75
+
+   11 storeFID: . ID
+   16 multiProtDcl: multiProtDcl ',' makeProt . storeFID '(' insertFunc paramTypes ')'
+
+    ID  shift, and go to state 18
+
+    storeFID  go to state 91
+
+
+State 76
+
+   12 storeID: . ID
+   34 function: type storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl statementOpt . '}'
+   39 statement: . IF '(' expr ')' statement
+   40          | . IF '(' expr ')' statement ELSE statement
+   41          | . WHILE '(' expr ')' statement
+   42          | . FOR '(' assgOpt ';' exprOpt ';' assgOpt ')' statement
+   43          | . RETURN expr ';'
+   44          | . RETURN ';'
+   45          | . assignment ';'
+   46          | . storeID '(' ')' ';'
+   48          | . storeID '(' $@1 args multiExprOpt ')' ';'
+   49          | . '{' statementOpt '}'
+   50          | . ';'
+   51          | . error ';'
+   52 statementOpt: statementOpt . statement
+   56 assignment: . storeID '=' expr
+   57           | . storeID '[' expr ']' '=' expr
+
+    error   shift, and go to state 79
+    ID      shift, and go to state 80
+    IF      shift, and go to state 81
+    WHILE   shift, and go to state 82
+    FOR     shift, and go to state 83
+    RETURN  shift, and go to state 84
+    ';'     shift, and go to state 85
+    '{'     shift, and go to state 86
+    '}'     shift, and go to state 92
+
+    storeID     go to state 88
+    statement   go to state 89
+    assignment  go to state 90
+
+
+State 77
+
+   37 multiTypeDcl: multiTypeDcl type error . ';'
+
+    ';'  shift, and go to state 93
+
+
+State 78
+
+   18 multiVarDcl: . multiVarDcl ',' varDcl
+   19            | . %empty
+   36 multiTypeDcl: multiTypeDcl type varDcl . multiVarDcl ';'
+
+    $default  reduce using rule 19 (multiVarDcl)
+
+    multiVarDcl  go to state 94
+
+
+State 79
+
+   51 statement: error . ';'
+
+    ';'  shift, and go to state 95
+
+
+State 80
+
+   12 storeID: ID .
+
+    $default  reduce using rule 12 (storeID)
+
+
+State 81
+
+   39 statement: IF . '(' expr ')' statement
+   40          | IF . '(' expr ')' statement ELSE statement
+
+    '('  shift, and go to state 96
+
+
+State 82
+
+   41 statement: WHILE . '(' expr ')' statement
+
+    '('  shift, and go to state 97
+
+
+State 83
+
+   42 statement: FOR . '(' assgOpt ';' exprOpt ';' assgOpt ')' statement
+
+    '('  shift, and go to state 98
+
+
+State 84
+
+   43 statement: RETURN . expr ';'
+   44          | RETURN . ';'
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    ';'      shift, and go to state 105
+    '('      shift, and go to state 106
+
+    expr  go to state 107
+
+
+State 85
+
+   50 statement: ';' .
+
+    $default  reduce using rule 50 (statement)
+
+
+State 86
+
+   49 statement: '{' . statementOpt '}'
+   52 statementOpt: . statementOpt statement
+   53             | . %empty
+
+    $default  reduce using rule 53 (statementOpt)
+
+    statementOpt  go to state 108
+
+
+State 87
+
+   35 function: storeVoid storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl statementOpt '}' .
+
+    $default  reduce using rule 35 (function)
+
+
+State 88
+
+   46 statement: storeID . '(' ')' ';'
+   48          | storeID . '(' $@1 args multiExprOpt ')' ';'
+   56 assignment: storeID . '=' expr
+   57           | storeID . '[' expr ']' '=' expr
+
+    '('  shift, and go to state 109
+    '['  shift, and go to state 110
+    '='  shift, and go to state 111
+
+
+State 89
+
+   52 statementOpt: statementOpt statement .
+
+    $default  reduce using rule 52 (statementOpt)
+
+
+State 90
+
+   45 statement: assignment . ';'
+
+    ';'  shift, and go to state 112
+
+
+State 91
+
+   16 multiProtDcl: multiProtDcl ',' makeProt storeFID . '(' insertFunc paramTypes ')'
+
+    '('  shift, and go to state 113
+
+
+State 92
+
+   34 function: type storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl statementOpt '}' .
+
+    $default  reduce using rule 34 (function)
+
+
+State 93
+
+   37 multiTypeDcl: multiTypeDcl type error ';' .
+
+    $default  reduce using rule 37 (multiTypeDcl)
+
+
+State 94
+
+   18 multiVarDcl: multiVarDcl . ',' varDcl
+   36 multiTypeDcl: multiTypeDcl type varDcl multiVarDcl . ';'
+
+    ';'  shift, and go to state 114
+    ','  shift, and go to state 34
+
+
+State 95
+
+   51 statement: error ';' .
+
+    $default  reduce using rule 51 (statement)
+
+
+State 96
+
+   39 statement: IF '(' . expr ')' statement
+   40          | IF '(' . expr ')' statement ELSE statement
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 115
+
+
+State 97
+
+   41 statement: WHILE '(' . expr ')' statement
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 116
+
+
+State 98
+
+   12 storeID: . ID
+   42 statement: FOR '(' . assgOpt ';' exprOpt ';' assgOpt ')' statement
+   56 assignment: . storeID '=' expr
+   57           | . storeID '[' expr ']' '=' expr
+   58 assgOpt: . assignment
+   59        | . %empty  [';']
+
+    ID  shift, and go to state 80
+
+    $default  reduce using rule 59 (assgOpt)
+
+    storeID     go to state 117
+    assignment  go to state 118
+    assgOpt     go to state 119
+
+
+State 99
+
+   74 $@2: . %empty
+   75 expr: ID . $@2 multiFuncOpt
+
+    $default  reduce using rule 74 ($@2)
+
+    $@2  go to state 120
+
+
+State 100
+
+   77 expr: INTCON .
+
+    $default  reduce using rule 77 (expr)
+
+
+State 101
+
+   78 expr: CHARCON .
+
+    $default  reduce using rule 78 (expr)
+
+
+State 102
+
+   79 expr: STRCON .
+
+    $default  reduce using rule 79 (expr)
+
+
+State 103
+
+   60 expr: . '-' expr
+   60     | '-' . expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 121
+
+
+State 104
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   61     | '!' . expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 122
+
+
+State 105
+
+   44 statement: RETURN ';' .
+
+    $default  reduce using rule 44 (statement)
+
+
+State 106
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   76     | '(' . expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 123
+
+
+State 107
+
+   43 statement: RETURN expr . ';'
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    DBLEQ     shift, and go to state 124
+    NOTEQ     shift, and go to state 125
+    LTEQ      shift, and go to state 126
+    GTEQ      shift, and go to state 127
+    LOGICAND  shift, and go to state 128
+    LOGICOR   shift, and go to state 129
+    '<'       shift, and go to state 130
+    '>'       shift, and go to state 131
+    '+'       shift, and go to state 132
+    '-'       shift, and go to state 133
+    '*'       shift, and go to state 134
+    '/'       shift, and go to state 135
+    ';'       shift, and go to state 136
+
+
+State 108
+
+   12 storeID: . ID
+   39 statement: . IF '(' expr ')' statement
+   40          | . IF '(' expr ')' statement ELSE statement
+   41          | . WHILE '(' expr ')' statement
+   42          | . FOR '(' assgOpt ';' exprOpt ';' assgOpt ')' statement
+   43          | . RETURN expr ';'
+   44          | . RETURN ';'
+   45          | . assignment ';'
+   46          | . storeID '(' ')' ';'
+   48          | . storeID '(' $@1 args multiExprOpt ')' ';'
+   49          | . '{' statementOpt '}'
+   49          | '{' statementOpt . '}'
+   50          | . ';'
+   51          | . error ';'
+   52 statementOpt: statementOpt . statement
+   56 assignment: . storeID '=' expr
+   57           | . storeID '[' expr ']' '=' expr
+
+    error   shift, and go to state 79
+    ID      shift, and go to state 80
+    IF      shift, and go to state 81
+    WHILE   shift, and go to state 82
+    FOR     shift, and go to state 83
+    RETURN  shift, and go to state 84
+    ';'     shift, and go to state 85
+    '{'     shift, and go to state 86
+    '}'     shift, and go to state 137
+
+    storeID     go to state 88
+    statement   go to state 89
+    assignment  go to state 90
+
+
+State 109
+
+   46 statement: storeID '(' . ')' ';'
+   47 $@1: . %empty  [ID, INTCON, CHARCON, STRCON, '-', '!', '(']
+   48 statement: storeID '(' . $@1 args multiExprOpt ')' ';'
+
+    ')'  shift, and go to state 138
+
+    $default  reduce using rule 47 ($@1)
+
+    $@1  go to state 139
+
+
+State 110
+
+   57 assignment: storeID '[' . expr ']' '=' expr
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 140
+
+
+State 111
+
+   56 assignment: storeID '=' . expr
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 141
+
+
+State 112
+
+   45 statement: assignment ';' .
+
+    $default  reduce using rule 45 (statement)
+
+
+State 113
+
+   16 multiProtDcl: multiProtDcl ',' makeProt storeFID '(' . insertFunc paramTypes ')'
+   33 insertFunc: . %empty
+
+    $default  reduce using rule 33 (insertFunc)
+
+    insertFunc  go to state 142
+
+
+State 114
+
+   36 multiTypeDcl: multiTypeDcl type varDcl multiVarDcl ';' .
+
+    $default  reduce using rule 36 (multiTypeDcl)
+
+
+State 115
+
+   39 statement: IF '(' expr . ')' statement
+   40          | IF '(' expr . ')' statement ELSE statement
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    DBLEQ     shift, and go to state 124
+    NOTEQ     shift, and go to state 125
+    LTEQ      shift, and go to state 126
+    GTEQ      shift, and go to state 127
+    LOGICAND  shift, and go to state 128
+    LOGICOR   shift, and go to state 129
+    '<'       shift, and go to state 130
+    '>'       shift, and go to state 131
+    '+'       shift, and go to state 132
+    '-'       shift, and go to state 133
+    '*'       shift, and go to state 134
+    '/'       shift, and go to state 135
+    ')'       shift, and go to state 143
+
+
+State 116
+
+   41 statement: WHILE '(' expr . ')' statement
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    DBLEQ     shift, and go to state 124
+    NOTEQ     shift, and go to state 125
+    LTEQ      shift, and go to state 126
+    GTEQ      shift, and go to state 127
+    LOGICAND  shift, and go to state 128
+    LOGICOR   shift, and go to state 129
+    '<'       shift, and go to state 130
+    '>'       shift, and go to state 131
+    '+'       shift, and go to state 132
+    '-'       shift, and go to state 133
+    '*'       shift, and go to state 134
+    '/'       shift, and go to state 135
+    ')'       shift, and go to state 144
+
+
+State 117
+
+   56 assignment: storeID . '=' expr
+   57           | storeID . '[' expr ']' '=' expr
+
+    '['  shift, and go to state 110
+    '='  shift, and go to state 111
+
+
+State 118
+
+   58 assgOpt: assignment .
+
+    $default  reduce using rule 58 (assgOpt)
+
+
+State 119
+
+   42 statement: FOR '(' assgOpt . ';' exprOpt ';' assgOpt ')' statement
+
+    ';'  shift, and go to state 145
+
+
+State 120
+
+   75 expr: ID $@2 . multiFuncOpt
+   80 multiFuncOpt: . '(' ')'
+   82             | . '(' $@3 args multiExprOpt ')'
+   84             | . '[' $@4 expr ']'
+   85             | . %empty  [DBLEQ, NOTEQ, LTEQ, GTEQ, LOGICAND, LOGICOR, '<', '>', '+', '-', '*', '/', ';', ')', ',', ']']
+
+    '('  shift, and go to state 146
+    '['  shift, and go to state 147
+
+    $default  reduce using rule 85 (multiFuncOpt)
+
+    multiFuncOpt  go to state 148
+
+
+State 121
+
+   60 expr: '-' expr .  [DBLEQ, NOTEQ, LTEQ, GTEQ, LOGICAND, LOGICOR, '<', '>', '+', '-', '*', '/', ';', ')', ',', ']']
+   62     | expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    $default  reduce using rule 60 (expr)
+
+    Conflict between rule 60 and token DBLEQ resolved as reduce (DBLEQ < UMINUS).
+    Conflict between rule 60 and token NOTEQ resolved as reduce (NOTEQ < UMINUS).
+    Conflict between rule 60 and token LTEQ resolved as reduce (LTEQ < UMINUS).
+    Conflict between rule 60 and token GTEQ resolved as reduce (GTEQ < UMINUS).
+    Conflict between rule 60 and token LOGICAND resolved as reduce (LOGICAND < UMINUS).
+    Conflict between rule 60 and token LOGICOR resolved as reduce (LOGICOR < UMINUS).
+    Conflict between rule 60 and token '<' resolved as reduce ('<' < UMINUS).
+    Conflict between rule 60 and token '>' resolved as reduce ('>' < UMINUS).
+    Conflict between rule 60 and token '+' resolved as reduce ('+' < UMINUS).
+    Conflict between rule 60 and token '-' resolved as reduce ('-' < UMINUS).
+    Conflict between rule 60 and token '*' resolved as reduce ('*' < UMINUS).
+    Conflict between rule 60 and token '/' resolved as reduce ('/' < UMINUS).
+
+
+State 122
+
+   61 expr: '!' expr .  [DBLEQ, NOTEQ, LTEQ, GTEQ, LOGICAND, LOGICOR, '<', '>', '+', '-', '*', '/', ';', ')', ',', ']']
+   62     | expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    $default  reduce using rule 61 (expr)
+
+    Conflict between rule 61 and token DBLEQ resolved as reduce (DBLEQ < '!').
+    Conflict between rule 61 and token NOTEQ resolved as reduce (NOTEQ < '!').
+    Conflict between rule 61 and token LTEQ resolved as reduce (LTEQ < '!').
+    Conflict between rule 61 and token GTEQ resolved as reduce (GTEQ < '!').
+    Conflict between rule 61 and token LOGICAND resolved as reduce (LOGICAND < '!').
+    Conflict between rule 61 and token LOGICOR resolved as reduce (LOGICOR < '!').
+    Conflict between rule 61 and token '<' resolved as reduce ('<' < '!').
+    Conflict between rule 61 and token '>' resolved as reduce ('>' < '!').
+    Conflict between rule 61 and token '+' resolved as reduce ('+' < '!').
+    Conflict between rule 61 and token '-' resolved as reduce ('-' < '!').
+    Conflict between rule 61 and token '*' resolved as reduce ('*' < '!').
+    Conflict between rule 61 and token '/' resolved as reduce ('/' < '!').
+
+
+State 123
+
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+   76     | '(' expr . ')'
+
+    DBLEQ     shift, and go to state 124
+    NOTEQ     shift, and go to state 125
+    LTEQ      shift, and go to state 126
+    GTEQ      shift, and go to state 127
+    LOGICAND  shift, and go to state 128
+    LOGICOR   shift, and go to state 129
+    '<'       shift, and go to state 130
+    '>'       shift, and go to state 131
+    '+'       shift, and go to state 132
+    '-'       shift, and go to state 133
+    '*'       shift, and go to state 134
+    '/'       shift, and go to state 135
+    ')'       shift, and go to state 149
+
+
+State 124
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   66     | expr DBLEQ . expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 150
+
+
+State 125
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   67     | expr NOTEQ . expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 151
+
+
+State 126
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   68     | expr LTEQ . expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 152
+
+
+State 127
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   70     | expr GTEQ . expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 153
+
+
+State 128
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   72     | expr LOGICAND . expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 154
+
+
+State 129
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   73     | expr LOGICOR . expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 155
+
+
+State 130
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   69     | expr '<' . expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 156
+
+
+State 131
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   71     | expr '>' . expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 157
+
+
+State 132
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   62     | expr '+' . expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 158
+
+
+State 133
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   63     | expr '-' . expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 159
+
+
+State 134
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   64     | expr '*' . expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 160
+
+
+State 135
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   65     | expr '/' . expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 161
+
+
+State 136
+
+   43 statement: RETURN expr ';' .
+
+    $default  reduce using rule 43 (statement)
+
+
+State 137
+
+   49 statement: '{' statementOpt '}' .
+
+    $default  reduce using rule 49 (statement)
+
+
+State 138
+
+   46 statement: storeID '(' ')' . ';'
+
+    ';'  shift, and go to state 162
+
+
+State 139
+
+   48 statement: storeID '(' $@1 . args multiExprOpt ')' ';'
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+   86 args: . expr
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 163
+    args  go to state 164
+
+
+State 140
+
+   57 assignment: storeID '[' expr . ']' '=' expr
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    DBLEQ     shift, and go to state 124
+    NOTEQ     shift, and go to state 125
+    LTEQ      shift, and go to state 126
+    GTEQ      shift, and go to state 127
+    LOGICAND  shift, and go to state 128
+    LOGICOR   shift, and go to state 129
+    '<'       shift, and go to state 130
+    '>'       shift, and go to state 131
+    '+'       shift, and go to state 132
+    '-'       shift, and go to state 133
+    '*'       shift, and go to state 134
+    '/'       shift, and go to state 135
+    ']'       shift, and go to state 165
+
+
+State 141
+
+   56 assignment: storeID '=' expr .  [';', ')']
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    DBLEQ     shift, and go to state 124
+    NOTEQ     shift, and go to state 125
+    LTEQ      shift, and go to state 126
+    GTEQ      shift, and go to state 127
+    LOGICAND  shift, and go to state 128
+    LOGICOR   shift, and go to state 129
+    '<'       shift, and go to state 130
+    '>'       shift, and go to state 131
+    '+'       shift, and go to state 132
+    '-'       shift, and go to state 133
+    '*'       shift, and go to state 134
+    '/'       shift, and go to state 135
+
+    $default  reduce using rule 56 (assignment)
+
+
+State 142
+
+   16 multiProtDcl: multiProtDcl ',' makeProt storeFID '(' insertFunc . paramTypes ')'
+   24 initParam: . %empty
+   25 paramTypes: . initParam VOID
+   26           | . initParam arrayTypeOpt multiParam
+
+    $default  reduce using rule 24 (initParam)
+
+    initParam   go to state 37
+    paramTypes  go to state 166
+
+
+State 143
+
+   12 storeID: . ID
+   39 statement: . IF '(' expr ')' statement
+   39          | IF '(' expr ')' . statement
+   40          | . IF '(' expr ')' statement ELSE statement
+   40          | IF '(' expr ')' . statement ELSE statement
+   41          | . WHILE '(' expr ')' statement
+   42          | . FOR '(' assgOpt ';' exprOpt ';' assgOpt ')' statement
+   43          | . RETURN expr ';'
+   44          | . RETURN ';'
+   45          | . assignment ';'
+   46          | . storeID '(' ')' ';'
+   48          | . storeID '(' $@1 args multiExprOpt ')' ';'
+   49          | . '{' statementOpt '}'
+   50          | . ';'
+   51          | . error ';'
+   56 assignment: . storeID '=' expr
+   57           | . storeID '[' expr ']' '=' expr
+
+    error   shift, and go to state 79
+    ID      shift, and go to state 80
+    IF      shift, and go to state 81
+    WHILE   shift, and go to state 82
+    FOR     shift, and go to state 83
+    RETURN  shift, and go to state 84
+    ';'     shift, and go to state 85
+    '{'     shift, and go to state 86
+
+    storeID     go to state 88
+    statement   go to state 167
+    assignment  go to state 90
+
+
+State 144
+
+   12 storeID: . ID
+   39 statement: . IF '(' expr ')' statement
+   40          | . IF '(' expr ')' statement ELSE statement
+   41          | . WHILE '(' expr ')' statement
+   41          | WHILE '(' expr ')' . statement
+   42          | . FOR '(' assgOpt ';' exprOpt ';' assgOpt ')' statement
+   43          | . RETURN expr ';'
+   44          | . RETURN ';'
+   45          | . assignment ';'
+   46          | . storeID '(' ')' ';'
+   48          | . storeID '(' $@1 args multiExprOpt ')' ';'
+   49          | . '{' statementOpt '}'
+   50          | . ';'
+   51          | . error ';'
+   56 assignment: . storeID '=' expr
+   57           | . storeID '[' expr ']' '=' expr
+
+    error   shift, and go to state 79
+    ID      shift, and go to state 80
+    IF      shift, and go to state 81
+    WHILE   shift, and go to state 82
+    FOR     shift, and go to state 83
+    RETURN  shift, and go to state 84
+    ';'     shift, and go to state 85
+    '{'     shift, and go to state 86
+
+    storeID     go to state 88
+    statement   go to state 168
+    assignment  go to state 90
+
+
+State 145
+
+   42 statement: FOR '(' assgOpt ';' . exprOpt ';' assgOpt ')' statement
+   54 exprOpt: . expr
+   55        | . %empty  [';']
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    $default  reduce using rule 55 (exprOpt)
+
+    exprOpt  go to state 169
+    expr     go to state 170
+
+
+State 146
+
+   80 multiFuncOpt: '(' . ')'
+   81 $@3: . %empty  [ID, INTCON, CHARCON, STRCON, '-', '!', '(']
+   82 multiFuncOpt: '(' . $@3 args multiExprOpt ')'
+
+    ')'  shift, and go to state 171
+
+    $default  reduce using rule 81 ($@3)
+
+    $@3  go to state 172
+
+
+State 147
+
+   83 $@4: . %empty
+   84 multiFuncOpt: '[' . $@4 expr ']'
+
+    $default  reduce using rule 83 ($@4)
+
+    $@4  go to state 173
+
+
+State 148
+
+   75 expr: ID $@2 multiFuncOpt .
+
+    $default  reduce using rule 75 (expr)
+
+
+State 149
+
+   76 expr: '(' expr ')' .
+
+    $default  reduce using rule 76 (expr)
+
+
+State 150
+
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   66     | expr DBLEQ expr .  [DBLEQ, NOTEQ, LOGICAND, LOGICOR, ';', ')', ',', ']']
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    LTEQ  shift, and go to state 126
+    GTEQ  shift, and go to state 127
+    '<'   shift, and go to state 130
+    '>'   shift, and go to state 131
+    '+'   shift, and go to state 132
+    '-'   shift, and go to state 133
+    '*'   shift, and go to state 134
+    '/'   shift, and go to state 135
+
+    $default  reduce using rule 66 (expr)
+
+    Conflict between rule 66 and token DBLEQ resolved as reduce (%left DBLEQ).
+    Conflict between rule 66 and token NOTEQ resolved as reduce (%left NOTEQ).
+    Conflict between rule 66 and token LTEQ resolved as shift (DBLEQ < LTEQ).
+    Conflict between rule 66 and token GTEQ resolved as shift (DBLEQ < GTEQ).
+    Conflict between rule 66 and token LOGICAND resolved as reduce (LOGICAND < DBLEQ).
+    Conflict between rule 66 and token LOGICOR resolved as reduce (LOGICOR < DBLEQ).
+    Conflict between rule 66 and token '<' resolved as shift (DBLEQ < '<').
+    Conflict between rule 66 and token '>' resolved as shift (DBLEQ < '>').
+    Conflict between rule 66 and token '+' resolved as shift (DBLEQ < '+').
+    Conflict between rule 66 and token '-' resolved as shift (DBLEQ < '-').
+    Conflict between rule 66 and token '*' resolved as shift (DBLEQ < '*').
+    Conflict between rule 66 and token '/' resolved as shift (DBLEQ < '/').
+
+
+State 151
+
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   67     | expr NOTEQ expr .  [DBLEQ, NOTEQ, LOGICAND, LOGICOR, ';', ')', ',', ']']
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    LTEQ  shift, and go to state 126
+    GTEQ  shift, and go to state 127
+    '<'   shift, and go to state 130
+    '>'   shift, and go to state 131
+    '+'   shift, and go to state 132
+    '-'   shift, and go to state 133
+    '*'   shift, and go to state 134
+    '/'   shift, and go to state 135
+
+    $default  reduce using rule 67 (expr)
+
+    Conflict between rule 67 and token DBLEQ resolved as reduce (%left DBLEQ).
+    Conflict between rule 67 and token NOTEQ resolved as reduce (%left NOTEQ).
+    Conflict between rule 67 and token LTEQ resolved as shift (NOTEQ < LTEQ).
+    Conflict between rule 67 and token GTEQ resolved as shift (NOTEQ < GTEQ).
+    Conflict between rule 67 and token LOGICAND resolved as reduce (LOGICAND < NOTEQ).
+    Conflict between rule 67 and token LOGICOR resolved as reduce (LOGICOR < NOTEQ).
+    Conflict between rule 67 and token '<' resolved as shift (NOTEQ < '<').
+    Conflict between rule 67 and token '>' resolved as shift (NOTEQ < '>').
+    Conflict between rule 67 and token '+' resolved as shift (NOTEQ < '+').
+    Conflict between rule 67 and token '-' resolved as shift (NOTEQ < '-').
+    Conflict between rule 67 and token '*' resolved as shift (NOTEQ < '*').
+    Conflict between rule 67 and token '/' resolved as shift (NOTEQ < '/').
+
+
+State 152
+
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   68     | expr LTEQ expr .  [DBLEQ, NOTEQ, LTEQ, GTEQ, LOGICAND, LOGICOR, '<', '>', ';', ')', ',', ']']
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    '+'  shift, and go to state 132
+    '-'  shift, and go to state 133
+    '*'  shift, and go to state 134
+    '/'  shift, and go to state 135
+
+    $default  reduce using rule 68 (expr)
+
+    Conflict between rule 68 and token DBLEQ resolved as reduce (DBLEQ < LTEQ).
+    Conflict between rule 68 and token NOTEQ resolved as reduce (NOTEQ < LTEQ).
+    Conflict between rule 68 and token LTEQ resolved as reduce (%left LTEQ).
+    Conflict between rule 68 and token GTEQ resolved as reduce (%left GTEQ).
+    Conflict between rule 68 and token LOGICAND resolved as reduce (LOGICAND < LTEQ).
+    Conflict between rule 68 and token LOGICOR resolved as reduce (LOGICOR < LTEQ).
+    Conflict between rule 68 and token '<' resolved as reduce (%left '<').
+    Conflict between rule 68 and token '>' resolved as reduce (%left '>').
+    Conflict between rule 68 and token '+' resolved as shift (LTEQ < '+').
+    Conflict between rule 68 and token '-' resolved as shift (LTEQ < '-').
+    Conflict between rule 68 and token '*' resolved as shift (LTEQ < '*').
+    Conflict between rule 68 and token '/' resolved as shift (LTEQ < '/').
+
+
+State 153
+
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   70     | expr GTEQ expr .  [DBLEQ, NOTEQ, LTEQ, GTEQ, LOGICAND, LOGICOR, '<', '>', ';', ')', ',', ']']
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    '+'  shift, and go to state 132
+    '-'  shift, and go to state 133
+    '*'  shift, and go to state 134
+    '/'  shift, and go to state 135
+
+    $default  reduce using rule 70 (expr)
+
+    Conflict between rule 70 and token DBLEQ resolved as reduce (DBLEQ < GTEQ).
+    Conflict between rule 70 and token NOTEQ resolved as reduce (NOTEQ < GTEQ).
+    Conflict between rule 70 and token LTEQ resolved as reduce (%left LTEQ).
+    Conflict between rule 70 and token GTEQ resolved as reduce (%left GTEQ).
+    Conflict between rule 70 and token LOGICAND resolved as reduce (LOGICAND < GTEQ).
+    Conflict between rule 70 and token LOGICOR resolved as reduce (LOGICOR < GTEQ).
+    Conflict between rule 70 and token '<' resolved as reduce (%left '<').
+    Conflict between rule 70 and token '>' resolved as reduce (%left '>').
+    Conflict between rule 70 and token '+' resolved as shift (GTEQ < '+').
+    Conflict between rule 70 and token '-' resolved as shift (GTEQ < '-').
+    Conflict between rule 70 and token '*' resolved as shift (GTEQ < '*').
+    Conflict between rule 70 and token '/' resolved as shift (GTEQ < '/').
+
+
+State 154
+
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   72     | expr LOGICAND expr .  [LOGICAND, LOGICOR, ';', ')', ',', ']']
+   73     | expr . LOGICOR expr
+
+    DBLEQ  shift, and go to state 124
+    NOTEQ  shift, and go to state 125
+    LTEQ   shift, and go to state 126
+    GTEQ   shift, and go to state 127
+    '<'    shift, and go to state 130
+    '>'    shift, and go to state 131
+    '+'    shift, and go to state 132
+    '-'    shift, and go to state 133
+    '*'    shift, and go to state 134
+    '/'    shift, and go to state 135
+
+    $default  reduce using rule 72 (expr)
+
+    Conflict between rule 72 and token DBLEQ resolved as shift (LOGICAND < DBLEQ).
+    Conflict between rule 72 and token NOTEQ resolved as shift (LOGICAND < NOTEQ).
+    Conflict between rule 72 and token LTEQ resolved as shift (LOGICAND < LTEQ).
+    Conflict between rule 72 and token GTEQ resolved as shift (LOGICAND < GTEQ).
+    Conflict between rule 72 and token LOGICAND resolved as reduce (%left LOGICAND).
+    Conflict between rule 72 and token LOGICOR resolved as reduce (LOGICOR < LOGICAND).
+    Conflict between rule 72 and token '<' resolved as shift (LOGICAND < '<').
+    Conflict between rule 72 and token '>' resolved as shift (LOGICAND < '>').
+    Conflict between rule 72 and token '+' resolved as shift (LOGICAND < '+').
+    Conflict between rule 72 and token '-' resolved as shift (LOGICAND < '-').
+    Conflict between rule 72 and token '*' resolved as shift (LOGICAND < '*').
+    Conflict between rule 72 and token '/' resolved as shift (LOGICAND < '/').
+
+
+State 155
+
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+   73     | expr LOGICOR expr .  [LOGICOR, ';', ')', ',', ']']
+
+    DBLEQ     shift, and go to state 124
+    NOTEQ     shift, and go to state 125
+    LTEQ      shift, and go to state 126
+    GTEQ      shift, and go to state 127
+    LOGICAND  shift, and go to state 128
+    '<'       shift, and go to state 130
+    '>'       shift, and go to state 131
+    '+'       shift, and go to state 132
+    '-'       shift, and go to state 133
+    '*'       shift, and go to state 134
+    '/'       shift, and go to state 135
+
+    $default  reduce using rule 73 (expr)
+
+    Conflict between rule 73 and token DBLEQ resolved as shift (LOGICOR < DBLEQ).
+    Conflict between rule 73 and token NOTEQ resolved as shift (LOGICOR < NOTEQ).
+    Conflict between rule 73 and token LTEQ resolved as shift (LOGICOR < LTEQ).
+    Conflict between rule 73 and token GTEQ resolved as shift (LOGICOR < GTEQ).
+    Conflict between rule 73 and token LOGICAND resolved as shift (LOGICOR < LOGICAND).
+    Conflict between rule 73 and token LOGICOR resolved as reduce (%left LOGICOR).
+    Conflict between rule 73 and token '<' resolved as shift (LOGICOR < '<').
+    Conflict between rule 73 and token '>' resolved as shift (LOGICOR < '>').
+    Conflict between rule 73 and token '+' resolved as shift (LOGICOR < '+').
+    Conflict between rule 73 and token '-' resolved as shift (LOGICOR < '-').
+    Conflict between rule 73 and token '*' resolved as shift (LOGICOR < '*').
+    Conflict between rule 73 and token '/' resolved as shift (LOGICOR < '/').
+
+
+State 156
+
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   69     | expr '<' expr .  [DBLEQ, NOTEQ, LTEQ, GTEQ, LOGICAND, LOGICOR, '<', '>', ';', ')', ',', ']']
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    '+'  shift, and go to state 132
+    '-'  shift, and go to state 133
+    '*'  shift, and go to state 134
+    '/'  shift, and go to state 135
+
+    $default  reduce using rule 69 (expr)
+
+    Conflict between rule 69 and token DBLEQ resolved as reduce (DBLEQ < '<').
+    Conflict between rule 69 and token NOTEQ resolved as reduce (NOTEQ < '<').
+    Conflict between rule 69 and token LTEQ resolved as reduce (%left LTEQ).
+    Conflict between rule 69 and token GTEQ resolved as reduce (%left GTEQ).
+    Conflict between rule 69 and token LOGICAND resolved as reduce (LOGICAND < '<').
+    Conflict between rule 69 and token LOGICOR resolved as reduce (LOGICOR < '<').
+    Conflict between rule 69 and token '<' resolved as reduce (%left '<').
+    Conflict between rule 69 and token '>' resolved as reduce (%left '>').
+    Conflict between rule 69 and token '+' resolved as shift ('<' < '+').
+    Conflict between rule 69 and token '-' resolved as shift ('<' < '-').
+    Conflict between rule 69 and token '*' resolved as shift ('<' < '*').
+    Conflict between rule 69 and token '/' resolved as shift ('<' < '/').
+
+
+State 157
+
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   71     | expr '>' expr .  [DBLEQ, NOTEQ, LTEQ, GTEQ, LOGICAND, LOGICOR, '<', '>', ';', ')', ',', ']']
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    '+'  shift, and go to state 132
+    '-'  shift, and go to state 133
+    '*'  shift, and go to state 134
+    '/'  shift, and go to state 135
+
+    $default  reduce using rule 71 (expr)
+
+    Conflict between rule 71 and token DBLEQ resolved as reduce (DBLEQ < '>').
+    Conflict between rule 71 and token NOTEQ resolved as reduce (NOTEQ < '>').
+    Conflict between rule 71 and token LTEQ resolved as reduce (%left LTEQ).
+    Conflict between rule 71 and token GTEQ resolved as reduce (%left GTEQ).
+    Conflict between rule 71 and token LOGICAND resolved as reduce (LOGICAND < '>').
+    Conflict between rule 71 and token LOGICOR resolved as reduce (LOGICOR < '>').
+    Conflict between rule 71 and token '<' resolved as reduce (%left '<').
+    Conflict between rule 71 and token '>' resolved as reduce (%left '>').
+    Conflict between rule 71 and token '+' resolved as shift ('>' < '+').
+    Conflict between rule 71 and token '-' resolved as shift ('>' < '-').
+    Conflict between rule 71 and token '*' resolved as shift ('>' < '*').
+    Conflict between rule 71 and token '/' resolved as shift ('>' < '/').
+
+
+State 158
+
+   62 expr: expr . '+' expr
+   62     | expr '+' expr .  [DBLEQ, NOTEQ, LTEQ, GTEQ, LOGICAND, LOGICOR, '<', '>', '+', '-', ';', ')', ',', ']']
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    '*'  shift, and go to state 134
+    '/'  shift, and go to state 135
+
+    $default  reduce using rule 62 (expr)
+
+    Conflict between rule 62 and token DBLEQ resolved as reduce (DBLEQ < '+').
+    Conflict between rule 62 and token NOTEQ resolved as reduce (NOTEQ < '+').
+    Conflict between rule 62 and token LTEQ resolved as reduce (LTEQ < '+').
+    Conflict between rule 62 and token GTEQ resolved as reduce (GTEQ < '+').
+    Conflict between rule 62 and token LOGICAND resolved as reduce (LOGICAND < '+').
+    Conflict between rule 62 and token LOGICOR resolved as reduce (LOGICOR < '+').
+    Conflict between rule 62 and token '<' resolved as reduce ('<' < '+').
+    Conflict between rule 62 and token '>' resolved as reduce ('>' < '+').
+    Conflict between rule 62 and token '+' resolved as reduce (%left '+').
+    Conflict between rule 62 and token '-' resolved as reduce (%left '-').
+    Conflict between rule 62 and token '*' resolved as shift ('+' < '*').
+    Conflict between rule 62 and token '/' resolved as shift ('+' < '/').
+
+
+State 159
+
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   63     | expr '-' expr .  [DBLEQ, NOTEQ, LTEQ, GTEQ, LOGICAND, LOGICOR, '<', '>', '+', '-', ';', ')', ',', ']']
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    '*'  shift, and go to state 134
+    '/'  shift, and go to state 135
+
+    $default  reduce using rule 63 (expr)
+
+    Conflict between rule 63 and token DBLEQ resolved as reduce (DBLEQ < '-').
+    Conflict between rule 63 and token NOTEQ resolved as reduce (NOTEQ < '-').
+    Conflict between rule 63 and token LTEQ resolved as reduce (LTEQ < '-').
+    Conflict between rule 63 and token GTEQ resolved as reduce (GTEQ < '-').
+    Conflict between rule 63 and token LOGICAND resolved as reduce (LOGICAND < '-').
+    Conflict between rule 63 and token LOGICOR resolved as reduce (LOGICOR < '-').
+    Conflict between rule 63 and token '<' resolved as reduce ('<' < '-').
+    Conflict between rule 63 and token '>' resolved as reduce ('>' < '-').
+    Conflict between rule 63 and token '+' resolved as reduce (%left '+').
+    Conflict between rule 63 and token '-' resolved as reduce (%left '-').
+    Conflict between rule 63 and token '*' resolved as shift ('-' < '*').
+    Conflict between rule 63 and token '/' resolved as shift ('-' < '/').
+
+
+State 160
+
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   64     | expr '*' expr .  [DBLEQ, NOTEQ, LTEQ, GTEQ, LOGICAND, LOGICOR, '<', '>', '+', '-', '*', '/', ';', ')', ',', ']']
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    $default  reduce using rule 64 (expr)
+
+    Conflict between rule 64 and token DBLEQ resolved as reduce (DBLEQ < '*').
+    Conflict between rule 64 and token NOTEQ resolved as reduce (NOTEQ < '*').
+    Conflict between rule 64 and token LTEQ resolved as reduce (LTEQ < '*').
+    Conflict between rule 64 and token GTEQ resolved as reduce (GTEQ < '*').
+    Conflict between rule 64 and token LOGICAND resolved as reduce (LOGICAND < '*').
+    Conflict between rule 64 and token LOGICOR resolved as reduce (LOGICOR < '*').
+    Conflict between rule 64 and token '<' resolved as reduce ('<' < '*').
+    Conflict between rule 64 and token '>' resolved as reduce ('>' < '*').
+    Conflict between rule 64 and token '+' resolved as reduce ('+' < '*').
+    Conflict between rule 64 and token '-' resolved as reduce ('-' < '*').
+    Conflict between rule 64 and token '*' resolved as reduce (%left '*').
+    Conflict between rule 64 and token '/' resolved as reduce (%left '/').
+
+
+State 161
+
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   65     | expr '/' expr .  [DBLEQ, NOTEQ, LTEQ, GTEQ, LOGICAND, LOGICOR, '<', '>', '+', '-', '*', '/', ';', ')', ',', ']']
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    $default  reduce using rule 65 (expr)
+
+    Conflict between rule 65 and token DBLEQ resolved as reduce (DBLEQ < '/').
+    Conflict between rule 65 and token NOTEQ resolved as reduce (NOTEQ < '/').
+    Conflict between rule 65 and token LTEQ resolved as reduce (LTEQ < '/').
+    Conflict between rule 65 and token GTEQ resolved as reduce (GTEQ < '/').
+    Conflict between rule 65 and token LOGICAND resolved as reduce (LOGICAND < '/').
+    Conflict between rule 65 and token LOGICOR resolved as reduce (LOGICOR < '/').
+    Conflict between rule 65 and token '<' resolved as reduce ('<' < '/').
+    Conflict between rule 65 and token '>' resolved as reduce ('>' < '/').
+    Conflict between rule 65 and token '+' resolved as reduce ('+' < '/').
+    Conflict between rule 65 and token '-' resolved as reduce ('-' < '/').
+    Conflict between rule 65 and token '*' resolved as reduce (%left '*').
+    Conflict between rule 65 and token '/' resolved as reduce (%left '/').
+
+
+State 162
+
+   46 statement: storeID '(' ')' ';' .
+
+    $default  reduce using rule 46 (statement)
+
+
+State 163
+
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+   86 args: expr .  [')', ',']
+
+    DBLEQ     shift, and go to state 124
+    NOTEQ     shift, and go to state 125
+    LTEQ      shift, and go to state 126
+    GTEQ      shift, and go to state 127
+    LOGICAND  shift, and go to state 128
+    LOGICOR   shift, and go to state 129
+    '<'       shift, and go to state 130
+    '>'       shift, and go to state 131
+    '+'       shift, and go to state 132
+    '-'       shift, and go to state 133
+    '*'       shift, and go to state 134
+    '/'       shift, and go to state 135
+
+    $default  reduce using rule 86 (args)
+
+
+State 164
+
+   48 statement: storeID '(' $@1 args . multiExprOpt ')' ';'
+   87 multiExprOpt: . multiExprOpt ',' args
+   88             | . %empty
+
+    $default  reduce using rule 88 (multiExprOpt)
+
+    multiExprOpt  go to state 174
+
+
+State 165
+
+   57 assignment: storeID '[' expr ']' . '=' expr
+
+    '='  shift, and go to state 175
+
+
+State 166
+
+   16 multiProtDcl: multiProtDcl ',' makeProt storeFID '(' insertFunc paramTypes . ')'
+
+    ')'  shift, and go to state 176
+
+
+State 167
+
+   39 statement: IF '(' expr ')' statement .  [error, ID, IF, ELSE, WHILE, FOR, RETURN, ';', '{', '}']
+   40          | IF '(' expr ')' statement . ELSE statement
+
+    ELSE  shift, and go to state 177
+
+    ELSE      [reduce using rule 39 (statement)]
+    $default  reduce using rule 39 (statement)
+
+
+State 168
+
+   41 statement: WHILE '(' expr ')' statement .
+
+    $default  reduce using rule 41 (statement)
+
+
+State 169
+
+   42 statement: FOR '(' assgOpt ';' exprOpt . ';' assgOpt ')' statement
+
+    ';'  shift, and go to state 178
+
+
+State 170
+
+   54 exprOpt: expr .  [';']
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    DBLEQ     shift, and go to state 124
+    NOTEQ     shift, and go to state 125
+    LTEQ      shift, and go to state 126
+    GTEQ      shift, and go to state 127
+    LOGICAND  shift, and go to state 128
+    LOGICOR   shift, and go to state 129
+    '<'       shift, and go to state 130
+    '>'       shift, and go to state 131
+    '+'       shift, and go to state 132
+    '-'       shift, and go to state 133
+    '*'       shift, and go to state 134
+    '/'       shift, and go to state 135
+
+    $default  reduce using rule 54 (exprOpt)
+
+
+State 171
+
+   80 multiFuncOpt: '(' ')' .
+
+    $default  reduce using rule 80 (multiFuncOpt)
+
+
+State 172
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+   82 multiFuncOpt: '(' $@3 . args multiExprOpt ')'
+   86 args: . expr
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 163
+    args  go to state 179
+
+
+State 173
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+   84 multiFuncOpt: '[' $@4 . expr ']'
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 180
+
+
+State 174
+
+   48 statement: storeID '(' $@1 args multiExprOpt . ')' ';'
+   87 multiExprOpt: multiExprOpt . ',' args
+
+    ')'  shift, and go to state 181
+    ','  shift, and go to state 182
+
+
+State 175
+
+   57 assignment: storeID '[' expr ']' '=' . expr
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 183
+
+
+State 176
+
+   16 multiProtDcl: multiProtDcl ',' makeProt storeFID '(' insertFunc paramTypes ')' .
+
+    $default  reduce using rule 16 (multiProtDcl)
+
+
+State 177
+
+   12 storeID: . ID
+   39 statement: . IF '(' expr ')' statement
+   40          | . IF '(' expr ')' statement ELSE statement
+   40          | IF '(' expr ')' statement ELSE . statement
+   41          | . WHILE '(' expr ')' statement
+   42          | . FOR '(' assgOpt ';' exprOpt ';' assgOpt ')' statement
+   43          | . RETURN expr ';'
+   44          | . RETURN ';'
+   45          | . assignment ';'
+   46          | . storeID '(' ')' ';'
+   48          | . storeID '(' $@1 args multiExprOpt ')' ';'
+   49          | . '{' statementOpt '}'
+   50          | . ';'
+   51          | . error ';'
+   56 assignment: . storeID '=' expr
+   57           | . storeID '[' expr ']' '=' expr
+
+    error   shift, and go to state 79
+    ID      shift, and go to state 80
+    IF      shift, and go to state 81
+    WHILE   shift, and go to state 82
+    FOR     shift, and go to state 83
+    RETURN  shift, and go to state 84
+    ';'     shift, and go to state 85
+    '{'     shift, and go to state 86
+
+    storeID     go to state 88
+    statement   go to state 184
+    assignment  go to state 90
+
+
+State 178
+
+   12 storeID: . ID
+   42 statement: FOR '(' assgOpt ';' exprOpt ';' . assgOpt ')' statement
+   56 assignment: . storeID '=' expr
+   57           | . storeID '[' expr ']' '=' expr
+   58 assgOpt: . assignment
+   59        | . %empty  [')']
+
+    ID  shift, and go to state 80
+
+    $default  reduce using rule 59 (assgOpt)
+
+    storeID     go to state 117
+    assignment  go to state 118
+    assgOpt     go to state 185
+
+
+State 179
+
+   82 multiFuncOpt: '(' $@3 args . multiExprOpt ')'
+   87 multiExprOpt: . multiExprOpt ',' args
+   88             | . %empty
+
+    $default  reduce using rule 88 (multiExprOpt)
+
+    multiExprOpt  go to state 186
+
+
+State 180
+
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+   84 multiFuncOpt: '[' $@4 expr . ']'
+
+    DBLEQ     shift, and go to state 124
+    NOTEQ     shift, and go to state 125
+    LTEQ      shift, and go to state 126
+    GTEQ      shift, and go to state 127
+    LOGICAND  shift, and go to state 128
+    LOGICOR   shift, and go to state 129
+    '<'       shift, and go to state 130
+    '>'       shift, and go to state 131
+    '+'       shift, and go to state 132
+    '-'       shift, and go to state 133
+    '*'       shift, and go to state 134
+    '/'       shift, and go to state 135
+    ']'       shift, and go to state 187
+
+
+State 181
+
+   48 statement: storeID '(' $@1 args multiExprOpt ')' . ';'
+
+    ';'  shift, and go to state 188
+
+
+State 182
+
+   60 expr: . '-' expr
+   61     | . '!' expr
+   62     | . expr '+' expr
+   63     | . expr '-' expr
+   64     | . expr '*' expr
+   65     | . expr '/' expr
+   66     | . expr DBLEQ expr
+   67     | . expr NOTEQ expr
+   68     | . expr LTEQ expr
+   69     | . expr '<' expr
+   70     | . expr GTEQ expr
+   71     | . expr '>' expr
+   72     | . expr LOGICAND expr
+   73     | . expr LOGICOR expr
+   75     | . ID $@2 multiFuncOpt
+   76     | . '(' expr ')'
+   77     | . INTCON
+   78     | . CHARCON
+   79     | . STRCON
+   86 args: . expr
+   87 multiExprOpt: multiExprOpt ',' . args
+
+    ID       shift, and go to state 99
+    INTCON   shift, and go to state 100
+    CHARCON  shift, and go to state 101
+    STRCON   shift, and go to state 102
+    '-'      shift, and go to state 103
+    '!'      shift, and go to state 104
+    '('      shift, and go to state 106
+
+    expr  go to state 163
+    args  go to state 189
+
+
+State 183
+
+   57 assignment: storeID '[' expr ']' '=' expr .  [';', ')']
+   62 expr: expr . '+' expr
+   63     | expr . '-' expr
+   64     | expr . '*' expr
+   65     | expr . '/' expr
+   66     | expr . DBLEQ expr
+   67     | expr . NOTEQ expr
+   68     | expr . LTEQ expr
+   69     | expr . '<' expr
+   70     | expr . GTEQ expr
+   71     | expr . '>' expr
+   72     | expr . LOGICAND expr
+   73     | expr . LOGICOR expr
+
+    DBLEQ     shift, and go to state 124
+    NOTEQ     shift, and go to state 125
+    LTEQ      shift, and go to state 126
+    GTEQ      shift, and go to state 127
+    LOGICAND  shift, and go to state 128
+    LOGICOR   shift, and go to state 129
+    '<'       shift, and go to state 130
+    '>'       shift, and go to state 131
+    '+'       shift, and go to state 132
+    '-'       shift, and go to state 133
+    '*'       shift, and go to state 134
+    '/'       shift, and go to state 135
+
+    $default  reduce using rule 57 (assignment)
+
+
+State 184
+
+   40 statement: IF '(' expr ')' statement ELSE statement .
+
+    $default  reduce using rule 40 (statement)
+
+
+State 185
+
+   42 statement: FOR '(' assgOpt ';' exprOpt ';' assgOpt . ')' statement
+
+    ')'  shift, and go to state 190
+
+
+State 186
+
+   82 multiFuncOpt: '(' $@3 args multiExprOpt . ')'
+   87 multiExprOpt: multiExprOpt . ',' args
+
+    ')'  shift, and go to state 191
+    ','  shift, and go to state 182
+
+
+State 187
+
+   84 multiFuncOpt: '[' $@4 expr ']' .
+
+    $default  reduce using rule 84 (multiFuncOpt)
+
+
+State 188
+
+   48 statement: storeID '(' $@1 args multiExprOpt ')' ';' .
+
+    $default  reduce using rule 48 (statement)
+
+
+State 189
+
+   87 multiExprOpt: multiExprOpt ',' args .
+
+    $default  reduce using rule 87 (multiExprOpt)
+
+
+State 190
+
+   12 storeID: . ID
+   39 statement: . IF '(' expr ')' statement
+   40          | . IF '(' expr ')' statement ELSE statement
+   41          | . WHILE '(' expr ')' statement
+   42          | . FOR '(' assgOpt ';' exprOpt ';' assgOpt ')' statement
+   42          | FOR '(' assgOpt ';' exprOpt ';' assgOpt ')' . statement
+   43          | . RETURN expr ';'
+   44          | . RETURN ';'
+   45          | . assignment ';'
+   46          | . storeID '(' ')' ';'
+   48          | . storeID '(' $@1 args multiExprOpt ')' ';'
+   49          | . '{' statementOpt '}'
+   50          | . ';'
+   51          | . error ';'
+   56 assignment: . storeID '=' expr
+   57           | . storeID '[' expr ']' '=' expr
+
+    error   shift, and go to state 79
+    ID      shift, and go to state 80
+    IF      shift, and go to state 81
+    WHILE   shift, and go to state 82
+    FOR     shift, and go to state 83
+    RETURN  shift, and go to state 84
+    ';'     shift, and go to state 85
+    '{'     shift, and go to state 86
+
+    storeID     go to state 88
+    statement   go to state 192
+    assignment  go to state 90
+
+
+State 191
+
+   82 multiFuncOpt: '(' $@3 args multiExprOpt ')' .
+
+    $default  reduce using rule 82 (multiFuncOpt)
+
+
+State 192
+
+   42 statement: FOR '(' assgOpt ';' exprOpt ';' assgOpt ')' statement .
+
+    $default  reduce using rule 42 (statement)
