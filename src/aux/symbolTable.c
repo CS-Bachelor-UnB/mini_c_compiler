@@ -228,7 +228,7 @@ void popSymbolTable() {
 	Parameter *rearp = NULL, *frontp = NULL;
 	SymbolTable *newStackTop = _stack->below;
 	
-	// if the symbol table at the top has symbols, free them first
+	// if the symbol table has symbols at the top, free them first
 	if (_stack->listHead) {
 		for(rear = _stack->listHead, front = rear->next; front; front = front->next) {
 			free(rear->identifier);
@@ -260,6 +260,7 @@ void printSymbolTable() {
 	Symbol *currSymbol = NULL;
 	SymbolTable *currTable = NULL;
 	
+	printf("|| SYMBOL TABLE || ");
 	for(currTable = _stack; currTable; currTable = currTable->below) {
 		if (currTable->below)
 			printf("LOCAL SCOPE:\n");

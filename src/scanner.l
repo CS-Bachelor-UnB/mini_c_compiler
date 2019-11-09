@@ -2,7 +2,6 @@
 #include "utilities.h"
 #include "symbolTable.h"
 #include "syntaxTree.h"
-#include "code.h"
 #include "y.tab.h"
 extern int errorCount;
 %}
@@ -10,16 +9,17 @@ extern int errorCount;
 %option yylineno
 
 identifier		[a-zA-Z][a-zA-Z0-9_]*
-intCon			[0-9]+
-charCon			'[\x20-\x26\x28-\x5B\x5D-\x7E]'|'\\n'|'\\0'
-strCon			\"[\x20\x21\x23-\x7E]*\"
+intConst		[0-9]+
+charConst		'[\x20-\x26\x28-\x5B\x5D-\x7E]'|'\\n'|'\\0'
+strConst		\"[\x20\x21\x23-\x7E]*\"
 lineComment		\/\/[^\n]*
 wspace			[ \t\n]
 catchAll		[\x00-\x7E]
 
 /* Citation: This comment state machine was found in Flex & Bison written by 
- * John Levine, published by O'Reilly. Pages 93 & 94.
- */
+*  John Levine, published by O'Reilly. Pages 93 & 94.
+*/
+
 %x COMMENT
 
 %%
@@ -66,8 +66,8 @@ catchAll		[\x00-\x7E]
 {wspace}		;
 {lineComment}	;
 {identifier}	{ yylval.string = strdup(yytext); } return(ID);
-{intCon}		{ yylval.integer = atoi(yytext); } return(INTCON);
-{charCon}		{ 
+{intConst}		{ yylval.integer = atoi(yytext); } return(INTCON);
+{charConst}		{ 
 					if (yytext[1] == '\\') {
 						if (yytext[2] == 'n')
 							yylval.character = '\n';
@@ -77,7 +77,7 @@ catchAll		[\x00-\x7E]
 						yylval.character = yytext[1];
 					}
 				 } return(CHARCON);
-{strCon}		{ yylval.string = strdup(yytext); } return(STRCON);
+{strConst}		{ yylval.string = strdup(yytext); } return(STRCON);
 {catchAll}		return(OTHER);
 
 %%

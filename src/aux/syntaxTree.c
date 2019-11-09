@@ -18,7 +18,6 @@ SyntaxTree *createTree(Operator operation, Symbol *symbol, SyntaxTree *left,
 	
 	newTree->operation = operation;
 	newTree->symbol = symbol;
-	newTree->code = NULL;
 	newTree->left = left;
 	newTree->right = right;
 	newTree->opt = NULL;

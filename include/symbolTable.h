@@ -13,8 +13,10 @@
 typedef enum Type {
 	CHAR_TYPE = 0xDEADBEEF,
 	INT_TYPE,
+	FLOAT_TYPE,
 	CHAR_ARRAY,
 	INT_ARRAY,
+	FLOAT_ARRAY,
 	VOID_TYPE,
 	BOOLEAN,
 	UNKNOWN
@@ -37,6 +39,7 @@ typedef enum FunctionType {
 typedef union Value {
 	int		intVal;			// also used to store the length of arrays
 	char 	charVal;
+	float	floatVal;
 	char	*strVal;
 } Value;
 
