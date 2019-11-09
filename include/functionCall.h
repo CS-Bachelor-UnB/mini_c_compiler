@@ -1,10 +1,3 @@
-/* File: functionCall.h 
- * Author: Amr Gaber
- * Created: 5/11/2010
- * Last Modified: 5/11/2010
- * Purpose: Header file for functionCall.c.
- */
-
 #ifndef __FUNCTIONCALL_H__
 #define __FUNCTIONCALL_H__
 

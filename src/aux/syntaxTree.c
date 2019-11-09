@@ -1,10 +1,3 @@
-/* File: syntaxTree.c
- * Author: Amr Gaber
- * Created: 4/11/2010
- * Last Modified: 27/11/2010
- * Purpose: Contains the syntax tree functions.
- */
-
 #include "utilities.h"
 #include "syntaxTree.h"
 

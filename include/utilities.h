@@ -1,10 +1,3 @@
-/* File: utilities.h
- * Author: Amr Gaber
- * Created: 11/4/2010
- * Last Modified: 21/10/2010
- * Purpose: Stores utility data.
- */
- 
 #ifndef __UTILITIES_H__
 #define __UTILITIES_H__
 

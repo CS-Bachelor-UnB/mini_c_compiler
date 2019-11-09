@@ -1,10 +1,3 @@
-/* File: code.c 
- * Author: Amr Gaber
- * Created: 4/11/2010
- * Last Modified: 27/11/2010
- * Purpose: Contains functions for the three address codes.
- */
-
 #include "utilities.h"
 #include "code.h"
 

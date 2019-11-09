@@ -1,10 +1,3 @@
-/* File: utilities.c
- * Author: Amr Gaber
- * Created: 11/4/2010
- * Last Modified: 21/10/2010
- * Purpose: Executes utility operations
- */
-
 #include "utilities.h"
 
 extern int errno;

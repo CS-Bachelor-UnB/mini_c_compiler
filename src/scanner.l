@@ -1,11 +1,3 @@
-/* File: scanner.lex
- * Author: Amr Gaber
- * Created: 24/9/2010
- * Last Modified: 27/11/2010
- * Purpose: Tokenizer for parser.yacc. Used with the makefile to construct
- * 				the C-- compiler.
- */
-
 %{
 #include "utilities.h"
 #include "symbolTable.h"

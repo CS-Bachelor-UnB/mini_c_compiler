@@ -1,10 +1,3 @@
-/* File: syntaxTree.h 
- * Author: Amr Gaber
- * Created: 3/11/2010
- * Last Modified: 27/11/2010
- * Purpose: Header file for syntaxTree.c.
- */
-
 #ifndef __SYNTAXTREE_H__
 #define __SYNTAXTREE_H__
 

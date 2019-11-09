@@ -1,10 +1,3 @@
-/* File: symbalTable.h 
- * Author: Amr Gaber
- * Created: 19/10/2010
- * Last Modified: 27/11/2010
- * Purpose: Header file for symbolTable.c.
- */
-
 #ifndef __SYMBOLTABLE_H__
 #define __SYMBOLTABLE_H__
 

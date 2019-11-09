@@ -1,10 +1,3 @@
-/* File: functionCall.c 
- * Author: Amr Gaber
- * Created: 5/11/2010
- * Last Modified: 5/11/2010
- * Purpose: Contains functions for the function call stack.
- */
-
 #include "utilities.h"
 #include "functionCall.h"
 

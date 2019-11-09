@@ -1,11 +1,3 @@
-/* File: parser.yacc 
- * Author: Amr Gaber
- * Created: 24/9/2010
- * Last Modified: 27/11/2010
- * Purpose: Parser for the C-- compiler. Used with scanner.lex and makefile to
- * 				construct the C-- compiler.
- */
-
 %{
 #include "utilities.h"
 #include "symbolTable.h"
