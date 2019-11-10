@@ -10,6 +10,7 @@ extern int errorCount;
 
 identifier		[a-zA-Z][a-zA-Z0-9_]*
 intConst		[0-9]+
+floatConst		[0-9]+\.[0-9]+
 charConst		'[\x20-\x26\x28-\x5B\x5D-\x7E]'|'\\n'|'\\0'
 strConst		\"[\x20\x21\x23-\x7E]*\"
 lineComment		\/\/[^\n]*
@@ -34,6 +35,7 @@ catchAll		[\x00-\x7E]
 
 "char"			return(CHAR);
 "int"			return(INT);
+"float"			return(FLOAT);
 "void"			return(VOID);
 "if"			return(IF);
 "else"			return(ELSE);
@@ -67,6 +69,7 @@ catchAll		[\x00-\x7E]
 {lineComment}	;
 {identifier}	{ yylval.string = strdup(yytext); } return(ID);
 {intConst}		{ yylval.integer = atoi(yytext); } return(INTCON);
+{floatConst}	{ yylval.real = atof(yytext); } return(FLOATCON);
 {charConst}		{ 
 					if (yytext[1] == '\\') {
 						if (yytext[2] == 'n')

@@ -134,7 +134,7 @@ Symbol *addParameter(char *identifier, Type type, Symbol *currentFunction);
  * Returns: void
  * Preconditions: none
  */
-void pushSymbolTable();
+void push_symbolTable_toStack();
 
 /* Function: popSymbolTable
  * Parameters: void
@@ -142,7 +142,7 @@ void pushSymbolTable();
  * Returns: void
  * Preconditions: The stack must not be empty.
  */
-void popSymbolTable();
+void pop_symbolTable_fromStack();
 
 /* Function: printSymbolTable
  * Parameters: none

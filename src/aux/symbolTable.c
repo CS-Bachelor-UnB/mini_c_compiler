@@ -175,13 +175,13 @@ Symbol *addParameter(char *identifier, Type type, Symbol *currentFunction) {
 	return NULL;
 }
 
-/* Function: pushSymbolTable
+/* Function: push_symbolTable_toStack
  * Parameters: void
  * Description: Pushes a new symbol table onto the stack.
  * Returns: void
  * Preconditions: none
  */
-void pushSymbolTable() {
+void push_symbolTable_toStack() {
 	SymbolTable *newTable = NULL;
 	
 	if (!(newTable = malloc(sizeof(SymbolTable))))
@@ -214,13 +214,13 @@ void freeParameterList(Parameter *parameterListHead) {
 	parameterListHead = NULL;
 }
 
-/* Function: popSymbolTable
+/* Function: pop_symbolTable_fromStack
  * Parameters: void
  * Description: Pops the symbol table on the top of the stack.
  * Returns: void
  * Preconditions: The stack must not be empty.
  */
-void popSymbolTable() {
+void pop_symbolTable_fromStack() {
 	if (!_stack)
 		ERROR("Pop called on empty stack.", __LINE__, FALSE);
 	
@@ -278,6 +278,9 @@ void printSymbolTable() {
 				case INT_TYPE:
 					printf("\tValue: %d\n", currSymbol->value.intVal);
 					break;
+				case FLOAT_TYPE:
+					printf("\tValue: %.2f\n", currSymbol->value.floatVal);
+					break;
 				default:
 					break;
 			}
@@ -301,10 +304,14 @@ char *typeAsString(Type type) {
 		return "CHAR";
 	if (type == INT_TYPE)
 		return "INT";
+	if (type == FLOAT_TYPE)
+		return "FLOAT";
 	if (type == CHAR_ARRAY)
 		return "CHAR_ARRAY";
 	if (type == INT_ARRAY)
 		return "INT_ARRAY";
+	if (type == FLOAT_ARRAY)
+		return "FLOAT_ARRAY";
 	if (type == VOID_TYPE)
 		return "VOID";
 	if (type == BOOLEAN)
