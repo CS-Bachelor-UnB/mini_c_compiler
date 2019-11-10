@@ -260,7 +260,7 @@ void printSymbolTable() {
 	Symbol *currSymbol = NULL;
 	SymbolTable *currTable = NULL;
 	
-	printf("|| SYMBOL TABLE || ");
+	printf("|| SYMBOL TABLE || \n");
 	for(currTable = _stack; currTable; currTable = currTable->below) {
 		if (currTable->below)
 			printf("LOCAL SCOPE:\n");
