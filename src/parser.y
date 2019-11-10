@@ -77,7 +77,7 @@ TempVariable *_tempVariables = NULL;
 
 %start program
 
-%token ID INTCON FLOATCON CHARCON STRCON CHAR INT FLOAT LIST VOID IF ELSE WHILE	FOR	RETURN EXTERN
+%token ID INTCON FLOATCON CHARCON STRCON CHAR INT FLOAT LIST VOID IF THEN ELSE WHILE FOR RETURN EXTERN
             UMINUS DBLEQ NOTEQ LTEQ GTEQ LOGICAND LOGICOR OTHER
 
 %type	<character>		CHARCON
@@ -96,6 +96,7 @@ TempVariable *_tempVariables = NULL;
 %left '+' '-'
 %left '*' '/'
 %right '!' UMINUS
+%right THEN ELSE
 
 %%
 
@@ -546,20 +547,20 @@ multiTypeDcl: multiTypeDcl type varDcl multiVarDcl ';'
             | /* empty */ { $$ = NULL; }
             ;
 
-statement:	  IF '(' expr ')' statement
+statement:	  IF '(' expr ')' THEN statement
             {
               if ($3.type != BOOLEAN)
                   typeError("conditional in if statement must be a boolean");
 
-              $$ = createTree(IF_TREE, NULL, $3.tree, $5);
+              $$ = createTree(IF_TREE, NULL, $3.tree, $6);
             }
-            | IF '(' expr ')' statement ELSE statement
+            | IF '(' expr ')' THEN statement ELSE statement
             {
               if ($3.type != BOOLEAN)
                   typeError("conditional in if statement must be a boolean");
 
-                $$ = createTree(IF_TREE, NULL, $3.tree, $5);
-                $$->opt = $7;
+                $$ = createTree(IF_TREE, NULL, $3.tree, $6);
+                $$->opt = $8;
             }
             | WHILE '(' expr ')' statement
             {
@@ -781,9 +782,9 @@ assgOpt:	  assignment { $$ = $1; }
             | /* empty */ { $$ = NULL; }
             ;
 
-expr:		  '-' expr %prec UMINUS
+expr:		'-' expr %prec UMINUS
             {
-                if (($2.type != INT_TYPE && $2.type != CHAR_TYPE && $2.type != FLOAT_TYPE))
+                if (($2.type != INT_TYPE && $2.type != FLOAT_TYPE))
                     typeError("incompatible expression for operator '-'");
 
                 $$.type = $2.type;
@@ -805,11 +806,15 @@ expr:		  '-' expr %prec UMINUS
             }
             | expr '+' expr
             {
-                if (($1.type != INT_TYPE && $1.type != CHAR_TYPE)
-                    || ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
                     typeError("incompatible expression for operator '+'");
 
-                $$.type = $1.type;
+                if ($1.type == FLOAT_TYPE)
+                    $$.type = $1.type;
+                else if ($3.type == FLOAT_TYPE)
+                    $$.type = $3.type;
+                else
+                    $$.type = $1.type;
 
                 generateNewTempID();
                 Symbol *newSymbol = insert(_tempID, INT_TYPE);
@@ -817,11 +822,15 @@ expr:		  '-' expr %prec UMINUS
             }
             | expr '-' expr
             {
-              if (($1.type != INT_TYPE && $1.type != CHAR_TYPE)
-                    || ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
-                  typeError("incompatible expression for operator '-'");
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                    typeError("incompatible expression for operator '-'");
 
-              $$.type = $1.type;
+                if ($1.type == FLOAT_TYPE)
+                        $$.type = $1.type;
+                else if ($3.type == FLOAT_TYPE)
+                    $$.type = $3.type;
+                else
+                    $$.type = $1.type;
 
               generateNewTempID();
               Symbol *newSymbol = insert(_tempID, INT_TYPE);
@@ -829,121 +838,123 @@ expr:		  '-' expr %prec UMINUS
             }
             | expr '*' expr
             {
-              if (($1.type != INT_TYPE && $1.type != CHAR_TYPE)
-                    || ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
-                  typeError("incompatible expression for operator '*'");
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                    typeError("incompatible expression for operator '*'");
 
-              $$.type = $1.type;
+                if ($1.type == FLOAT_TYPE)
+                    $$.type = $1.type;
+                else if ($3.type == FLOAT_TYPE)
+                    $$.type = $3.type;
+                else
+                    $$.type = $1.type;
 
-              generateNewTempID();
-              Symbol *newSymbol = insert(_tempID, INT_TYPE);
-              $$.tree = createTree(MULT, newSymbol, $3.tree, $1.tree);
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, INT_TYPE);
+                $$.tree = createTree(MULT, newSymbol, $3.tree, $1.tree);
             }
             | expr '/' expr
             {
-              if (($1.type != INT_TYPE && $1.type != CHAR_TYPE)
-                    || ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
-                  typeError("incompatible expression for operator '/'");
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                    typeError("incompatible expression for operator '/'");
 
-              $$.type = $1.type;
+                if ($1.type == FLOAT_TYPE)
+                    $$.type = $1.type;
+                else if ($3.type == FLOAT_TYPE)
+                    $$.type = $3.type;
+                else
+                    $$.type = $1.type;
 
-              generateNewTempID();
-              Symbol *newSymbol = insert(_tempID, INT_TYPE);
-              $$.tree = createTree(DIV, newSymbol, $3.tree, $1.tree);
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, INT_TYPE);
+                $$.tree = createTree(DIV, newSymbol, $3.tree, $1.tree);
             }
             | expr DBLEQ expr
             {
-              if (($1.type != INT_TYPE && $1.type != CHAR_TYPE)
-                    || ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
-                  typeError("incompatible expression for operator '=='");
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                    typeError("incompatible expression for operator '=='");
 
-              $$.type = BOOLEAN;
+                $$.type = BOOLEAN;
 
-              generateNewTempID();
-              Symbol *newSymbol = insert(_tempID, BOOLEAN);
-              $$.tree = createTree(EQUAL, newSymbol, $3.tree, $1.tree);
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(EQUAL, newSymbol, $3.tree, $1.tree);
             }
             | expr NOTEQ expr
             {
-              if (($1.type != INT_TYPE && $1.type != CHAR_TYPE)
-                    || ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
-                  typeError("incompatible expression for operator '!='");
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                    typeError("incompatible expression for operator '!='");
 
-              $$.type = BOOLEAN;
+                $$.type = BOOLEAN;
 
-              generateNewTempID();
-              Symbol *newSymbol = insert(_tempID, BOOLEAN);
-              $$.tree = createTree(NOT_EQUAL, newSymbol, $3.tree, $1.tree);
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(NOT_EQUAL, newSymbol, $3.tree, $1.tree);
             }
             | expr LTEQ expr
             {
-              if (($1.type != INT_TYPE && $1.type != CHAR_TYPE)
-                    || ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
-                  typeError("incompatible expression for operator '<='");
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                    typeError("incompatible expression for operator '<='");
 
-              $$.type = BOOLEAN;
+                $$.type = BOOLEAN;
 
-              generateNewTempID();
-              Symbol *newSymbol = insert(_tempID, BOOLEAN);
-              $$.tree = createTree(LESS_EQUAL, newSymbol, $3.tree, $1.tree);
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(LESS_EQUAL, newSymbol, $3.tree, $1.tree);
             }
             | expr '<' expr
             {
-              if (($1.type != INT_TYPE && $1.type != CHAR_TYPE)
-                    || ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
-                  typeError("incompatible expression for operator '<'");
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                    typeError("incompatible expression for operator '<'");
 
-              $$.type = BOOLEAN;
+                $$.type = BOOLEAN;
 
-              generateNewTempID();
-              Symbol *newSymbol = insert(_tempID, BOOLEAN);
-              $$.tree = createTree(LESS_THAN, newSymbol, $3.tree, $1.tree);
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(LESS_THAN, newSymbol, $3.tree, $1.tree);
             }
             | expr GTEQ expr
             {
-              if (($1.type != INT_TYPE && $1.type != CHAR_TYPE)
-                    || ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
-                  typeError("incompatible expression for operator '>='");
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                    typeError("incompatible expression for operator '>='");
 
-              $$.type = BOOLEAN;
+                $$.type = BOOLEAN;
 
-              generateNewTempID();
-              Symbol *newSymbol = insert(_tempID, BOOLEAN);
-              $$.tree = createTree(GREATER_EQUAL, newSymbol, $3.tree, $1.tree);
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(GREATER_EQUAL, newSymbol, $3.tree, $1.tree);
             }
             | expr '>' expr
             {
-              if (($1.type != INT_TYPE && $1.type != CHAR_TYPE)
-                    || ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
-                  typeError("incompatible expression for operator '>'");
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                    typeError("incompatible expression for operator '>'");
 
-              $$.type = BOOLEAN;
+                $$.type = BOOLEAN;
 
-              generateNewTempID();
-              Symbol *newSymbol = insert(_tempID, BOOLEAN);
-              $$.tree = createTree(GREATER_THAN, newSymbol, $3.tree, $1.tree);
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(GREATER_THAN, newSymbol, $3.tree, $1.tree);
             }
             | expr LOGICAND expr
             {
-              if ($1.type != BOOLEAN || $3.type != BOOLEAN)
-                  typeError("incompatible expression for operator '&&'");
+                if ($1.type != BOOLEAN || $3.type != BOOLEAN)
+                    typeError("incompatible expression for operator '&&'");
 
-              $$.type = BOOLEAN;
+                $$.type = BOOLEAN;
 
-              generateNewTempID();
-              Symbol *newSymbol = insert(_tempID, BOOLEAN);
-              $$.tree = createTree(AND, newSymbol, $3.tree, $1.tree);
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(AND, newSymbol, $3.tree, $1.tree);
             }
             | expr LOGICOR expr
             {
-              if ($1.type != BOOLEAN || $3.type != BOOLEAN)
-                  typeError("incompatible expression for operator '||'");
+                if ($1.type != BOOLEAN || $3.type != BOOLEAN)
+                    typeError("incompatible expression for operator '||'");
 
-              $$.type = BOOLEAN;
+                $$.type = BOOLEAN;
 
-              generateNewTempID();
-              Symbol *newSymbol = insert(_tempID, BOOLEAN);
-              $$.tree = createTree(OR, newSymbol, $3.tree, $1.tree);
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(OR, newSymbol, $3.tree, $1.tree);
             }
             | ID
             {
