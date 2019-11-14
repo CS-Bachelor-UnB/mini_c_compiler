@@ -863,6 +863,9 @@ expr:		'-' expr %prec UMINUS
             {
                 if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
                     typeError("incompatible expression for operator '/'");
+                
+                // else if ((($3.type == FLOAT_TYPE || $3.type == INT_TYPE) && 1))
+                //     typeError("cannot divide by 0");
 
                 if ($1.type == FLOAT_TYPE)
                     $$.type = $1.type;
