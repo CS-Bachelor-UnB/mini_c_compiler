@@ -113,7 +113,6 @@ program:	  program declaration ';'
 declaration:  type varDcl multiVarDcl
             {
               SyntaxTree *declarations = createTree(DECLARATION, NULL, $2, $3);
-              declareGlobalVariables(declarations);
               printf("\n");
               destroyTree(declarations);
             }
@@ -1325,33 +1324,6 @@ void yyerror(char* errorMessage) {
 
 int yywrap() {
     return 1;
-}
-
-/* Function: declareGlobalVariables
- * Parameters: SyntaxTree *tree
- * Description: Converts global declarations to assembly code.
- * Returns: none
- * Preconditions: none
- */
-void declareGlobalVariables(SyntaxTree *tree) {
-    if (!tree)
-        return;
-
-    Symbol *currSymbol = tree->symbol;
-
-    if (!currSymbol) {
-        declareGlobalVariables(tree->left);
-        declareGlobalVariables(tree->right);
-        return;
-    }
-
-    if (!(currSymbol->location = malloc(strlen(currSymbol->identifier) + 2)))
-        ERROR(NULL, __LINE__, TRUE);				//out of memory
-
-    sprintf(currSymbol->location, "_%s", currSymbol->identifier);
-
-    declareGlobalVariables(tree->left);
-    declareGlobalVariables(tree->right);
 }
 
 /* Function: allocateStackSpace
