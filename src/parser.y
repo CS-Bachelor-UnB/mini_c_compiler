@@ -77,7 +77,7 @@ TempVariable *_tempVariables = NULL;
 
 %start program
 
-%token ID INTCON FLOATCON CHARCON STRCON CHAR INT FLOAT LIST VOID IF THEN ELSE WHILE FOR RETURN EXTERN
+%token ID INTCON FLOATCON CHARCON STRCON CHAR INT FLOAT LIST VOID IF ELSE WHILE FOR RETURN EXTERN
             UMINUS DBLEQ NOTEQ LTEQ GTEQ LOGICAND LOGICOR OTHER
 
 %type	<character>		CHARCON
@@ -96,7 +96,7 @@ TempVariable *_tempVariables = NULL;
 %left '+' '-'
 %left '*' '/'
 %right '!' UMINUS
-%right THEN ELSE
+%right ')' ELSE
 
 %%
 
@@ -394,8 +394,7 @@ function:	  type storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl
                     statementOpt '}'
             {
               if (!_returnedValue) {
-                  sprintf(_errorMessage, "function %s must have at least one return statement",
-                      _currFID);
+                  sprintf(_errorMessage, "function %s must have at least one return statement", _currFID);
                   typeError(_errorMessage);
               } else {
                   _returnedValue = FALSE;
@@ -546,20 +545,20 @@ multiTypeDcl: multiTypeDcl type varDcl multiVarDcl ';'
             | /* empty */ { $$ = NULL; }
             ;
 
-statement:	  IF '(' expr ')' THEN statement
+statement:	  IF '(' expr ')' statement
             {
               if ($3.type != BOOLEAN)
                   typeError("conditional in if statement must be a boolean");
 
-              $$ = createTree(IF_TREE, NULL, $3.tree, $6);
+              $$ = createTree(IF_TREE, NULL, $3.tree, $5);
             }
-            | IF '(' expr ')' THEN statement ELSE statement
+            | IF '(' expr ')' statement ELSE statement
             {
               if ($3.type != BOOLEAN)
                   typeError("conditional in if statement must be a boolean");
 
-                $$ = createTree(IF_TREE, NULL, $3.tree, $6);
-                $$->opt = $8;
+                $$ = createTree(IF_TREE, NULL, $3.tree, $5);
+                $$->opt = $7;
             }
             | WHILE '(' expr ')' statement
             {
@@ -701,6 +700,7 @@ statement:	  IF '(' expr ')' THEN statement
             /* error productions */
             | error ';' { yyerrok; }
             ;
+
 statementOpt: statementOpt statement
             {
               if ($2) {
@@ -783,8 +783,10 @@ assgOpt:	  assignment { $$ = $1; }
 
 expr:		'-' expr %prec UMINUS
             {
-                if (($2.type != INT_TYPE && $2.type != FLOAT_TYPE))
+                if (($2.type != INT_TYPE && $2.type != FLOAT_TYPE)){
+                    $$.type = INT_TYPE;
                     typeError("incompatible expression for operator '-'");
+                }
 
                 $$.type = $2.type;
 
@@ -794,8 +796,10 @@ expr:		'-' expr %prec UMINUS
             }
             | '!' expr
             {
-                if ($2.type != BOOLEAN)
+                if ($2.type != BOOLEAN){
+                    $$.type = INT_TYPE;
                     typeError("incompatible expression for operator '!'");
+                }
 
                 $$.type = $2.type;
 
@@ -805,24 +809,28 @@ expr:		'-' expr %prec UMINUS
             }
             | expr '+' expr
             {
-                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE))){
+                    $$.type = VOID;
                     typeError("incompatible expression for operator '+'");
+                } else {
+                    if ($1.type == FLOAT_TYPE)
+                        $$.type = $1.type;
+                    else if ($3.type == FLOAT_TYPE)
+                        $$.type = $3.type;
+                    else
+                        $$.type = $1.type;
 
-                if ($1.type == FLOAT_TYPE)
-                    $$.type = $1.type;
-                else if ($3.type == FLOAT_TYPE)
-                    $$.type = $3.type;
-                else
-                    $$.type = $1.type;
-
-                generateNewTempID();
-                Symbol *newSymbol = insert(_tempID, INT_TYPE);
-                $$.tree = createTree(ADD, newSymbol, $3.tree, $1.tree);
+                    generateNewTempID();
+                    Symbol *newSymbol = insert(_tempID, INT_TYPE);
+                    $$.tree = createTree(ADD, newSymbol, $3.tree, $1.tree);
+                }
             }
             | expr '-' expr
             {
-                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE))){
+                    $$.type = INT_TYPE;
                     typeError("incompatible expression for operator '-'");
+                }
 
                 if ($1.type == FLOAT_TYPE)
                         $$.type = $1.type;
@@ -1172,7 +1180,7 @@ args:		  expr
                     } else if (_callStack->currParam->type != $1.type) {
                         if (((_callStack->currParam->type != INT_TYPE && _callStack->currParam->type != CHAR_TYPE) || ($1.type != INT_TYPE && $1.type != CHAR_TYPE))) {
                             typeError("type mismatch in arguments to function");
-                            $$ = NULL;
+                            $$ = createTree(PARAMETER, NULL, NULL, $1.tree);
                         } else {
                             $$ = createTree(PARAMETER, NULL, NULL, $1.tree);
                         }
@@ -1209,8 +1217,11 @@ int main() {
     // popStringLiterals(_stringLiterals);
     pop_symbolTable_fromStack();				// free global symbol table
 
-    if (_parsing_success)
-      return 0;					// success
+    if (_parsing_success){
+      printf("Successfully parsed and annotated!\n");
+      return 0;
+    }
+    printf("Error while parsing!\n Error messages printed along the annotated ST above\n");
     return 1;						// failure
 }
 
