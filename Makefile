@@ -6,7 +6,7 @@ SRC_AUX_DIR = src/aux
 ASSETS_DIR = ./assets
 
 CC = gcc
-CFLAGS = -Wall -g
+CFLAGS = -w
 
 
 all: 
