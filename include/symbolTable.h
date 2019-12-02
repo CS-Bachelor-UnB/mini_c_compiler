@@ -13,10 +13,15 @@
 typedef enum Type {
 	CHAR_TYPE = 0xDEADBEEF,
 	INT_TYPE,
+<<<<<<< include/symbolTable.h
 	FLOAT_TYPE,
 	CHAR_ARRAY,
 	INT_ARRAY,
 	FLOAT_ARRAY,
+=======
+	CHAR_ARRAY,
+	INT_ARRAY,
+>>>>>>> include/symbolTable.h.master
 	VOID_TYPE,
 	BOOLEAN,
 	UNKNOWN
@@ -39,7 +44,10 @@ typedef enum FunctionType {
 typedef union Value {
 	int		intVal;			// also used to store the length of arrays
 	char 	charVal;
+<<<<<<< include/symbolTable.h
 	float	floatVal;
+=======
+>>>>>>> include/symbolTable.h.master
 	char	*strVal;
 } Value;
 
@@ -134,7 +142,11 @@ Symbol *addParameter(char *identifier, Type type, Symbol *currentFunction);
  * Returns: void
  * Preconditions: none
  */
+<<<<<<< include/symbolTable.h
 void push_symbolTable_toStack();
+=======
+void pushSymbolTable();
+>>>>>>> include/symbolTable.h.master
 
 /* Function: popSymbolTable
  * Parameters: void
@@ -142,7 +154,11 @@ void push_symbolTable_toStack();
  * Returns: void
  * Preconditions: The stack must not be empty.
  */
+<<<<<<< include/symbolTable.h
 void pop_symbolTable_fromStack();
+=======
+void popSymbolTable();
+>>>>>>> include/symbolTable.h.master
 
 /* Function: printSymbolTable
  * Parameters: none

@@ -175,13 +175,21 @@ Symbol *addParameter(char *identifier, Type type, Symbol *currentFunction) {
 	return NULL;
 }
 
+<<<<<<< src/aux/symbolTable.c
 /* Function: push_symbolTable_toStack
+=======
+/* Function: pushSymbolTable
+>>>>>>> src/aux/symbolTable.c.master
  * Parameters: void
  * Description: Pushes a new symbol table onto the stack.
  * Returns: void
  * Preconditions: none
  */
+<<<<<<< src/aux/symbolTable.c
 void push_symbolTable_toStack() {
+=======
+void pushSymbolTable() {
+>>>>>>> src/aux/symbolTable.c.master
 	SymbolTable *newTable = NULL;
 	
 	if (!(newTable = malloc(sizeof(SymbolTable))))
@@ -214,13 +222,21 @@ void freeParameterList(Parameter *parameterListHead) {
 	parameterListHead = NULL;
 }
 
+<<<<<<< src/aux/symbolTable.c
 /* Function: pop_symbolTable_fromStack
+=======
+/* Function: popSymbolTable
+>>>>>>> src/aux/symbolTable.c.master
  * Parameters: void
  * Description: Pops the symbol table on the top of the stack.
  * Returns: void
  * Preconditions: The stack must not be empty.
  */
+<<<<<<< src/aux/symbolTable.c
 void pop_symbolTable_fromStack() {
+=======
+void popSymbolTable() {
+>>>>>>> src/aux/symbolTable.c.master
 	if (!_stack)
 		ERROR("Pop called on empty stack.", __LINE__, FALSE);
 	
@@ -228,7 +244,11 @@ void pop_symbolTable_fromStack() {
 	Parameter *rearp = NULL, *frontp = NULL;
 	SymbolTable *newStackTop = _stack->below;
 	
+<<<<<<< src/aux/symbolTable.c
 	// if the symbol table has symbols at the top, free them first
+=======
+	// if the symbol table at the top has symbols, free them first
+>>>>>>> src/aux/symbolTable.c.master
 	if (_stack->listHead) {
 		for(rear = _stack->listHead, front = rear->next; front; front = front->next) {
 			free(rear->identifier);
@@ -260,7 +280,10 @@ void printSymbolTable() {
 	Symbol *currSymbol = NULL;
 	SymbolTable *currTable = NULL;
 	
+<<<<<<< src/aux/symbolTable.c
 	printf("|| SYMBOL TABLE || \n");
+=======
+>>>>>>> src/aux/symbolTable.c.master
 	for(currTable = _stack; currTable; currTable = currTable->below) {
 		if (currTable->below)
 			printf("LOCAL SCOPE:\n");
@@ -278,9 +301,12 @@ void printSymbolTable() {
 				case INT_TYPE:
 					printf("\tValue: %d\n", currSymbol->value.intVal);
 					break;
+<<<<<<< src/aux/symbolTable.c
 				case FLOAT_TYPE:
 					printf("\tValue: %.2f\n", currSymbol->value.floatVal);
 					break;
+=======
+>>>>>>> src/aux/symbolTable.c.master
 				default:
 					break;
 			}
@@ -304,14 +330,20 @@ char *typeAsString(Type type) {
 		return "CHAR";
 	if (type == INT_TYPE)
 		return "INT";
+<<<<<<< src/aux/symbolTable.c
 	if (type == FLOAT_TYPE)
 		return "FLOAT";
+=======
+>>>>>>> src/aux/symbolTable.c.master
 	if (type == CHAR_ARRAY)
 		return "CHAR_ARRAY";
 	if (type == INT_ARRAY)
 		return "INT_ARRAY";
+<<<<<<< src/aux/symbolTable.c
 	if (type == FLOAT_ARRAY)
 		return "FLOAT_ARRAY";
+=======
+>>>>>>> src/aux/symbolTable.c.master
 	if (type == VOID_TYPE)
 		return "VOID";
 	if (type == BOOLEAN)
