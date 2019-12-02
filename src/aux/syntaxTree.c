@@ -18,10 +18,6 @@ SyntaxTree *createTree(Operator operation, Symbol *symbol, SyntaxTree *left,
 	
 	newTree->operation = operation;
 	newTree->symbol = symbol;
-<<<<<<< src/aux/syntaxTree.c
-=======
-	newTree->code = NULL;
->>>>>>> src/aux/syntaxTree.c.master
 	newTree->left = left;
 	newTree->right = right;
 	newTree->opt = NULL;

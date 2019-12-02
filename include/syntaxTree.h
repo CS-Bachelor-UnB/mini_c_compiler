@@ -2,11 +2,7 @@
 #define __SYNTAXTREE_H__
 
 #include "symbolTable.h"
-<<<<<<< include/syntaxTree.h
-// #include "code.h"
-=======
 #include "code.h"
->>>>>>> include/syntaxTree.h.master
 
 /************************
  *						*
@@ -54,10 +50,6 @@ typedef enum Operator {
 typedef struct SyntaxTree {
 	Operator 	operation;
 	Symbol		*symbol;
-<<<<<<< include/syntaxTree.h
-=======
-	Code 		*code;
->>>>>>> include/syntaxTree.h.master
 	struct SyntaxTree *left, *right, *opt;
 } SyntaxTree;
 
