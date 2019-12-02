@@ -175,21 +175,13 @@ Symbol *addParameter(char *identifier, Type type, Symbol *currentFunction) {
 	return NULL;
 }
 
-<<<<<<< src/aux/symbolTable.c
 /* Function: push_symbolTable_toStack
-=======
-/* Function: pushSymbolTable
->>>>>>> src/aux/symbolTable.c.master
  * Parameters: void
  * Description: Pushes a new symbol table onto the stack.
  * Returns: void
  * Preconditions: none
  */
-<<<<<<< src/aux/symbolTable.c
 void push_symbolTable_toStack() {
-=======
-void pushSymbolTable() {
->>>>>>> src/aux/symbolTable.c.master
 	SymbolTable *newTable = NULL;
 	
 	if (!(newTable = malloc(sizeof(SymbolTable))))
@@ -222,21 +214,13 @@ void freeParameterList(Parameter *parameterListHead) {
 	parameterListHead = NULL;
 }
 
-<<<<<<< src/aux/symbolTable.c
 /* Function: pop_symbolTable_fromStack
-=======
-/* Function: popSymbolTable
->>>>>>> src/aux/symbolTable.c.master
  * Parameters: void
  * Description: Pops the symbol table on the top of the stack.
  * Returns: void
  * Preconditions: The stack must not be empty.
  */
-<<<<<<< src/aux/symbolTable.c
 void pop_symbolTable_fromStack() {
-=======
-void popSymbolTable() {
->>>>>>> src/aux/symbolTable.c.master
 	if (!_stack)
 		ERROR("Pop called on empty stack.", __LINE__, FALSE);
 	
@@ -244,11 +228,7 @@ void popSymbolTable() {
 	Parameter *rearp = NULL, *frontp = NULL;
 	SymbolTable *newStackTop = _stack->below;
 	
-<<<<<<< src/aux/symbolTable.c
 	// if the symbol table has symbols at the top, free them first
-=======
-	// if the symbol table at the top has symbols, free them first
->>>>>>> src/aux/symbolTable.c.master
 	if (_stack->listHead) {
 		for(rear = _stack->listHead, front = rear->next; front; front = front->next) {
 			free(rear->identifier);
@@ -265,114 +245,6 @@ void popSymbolTable() {
 	
 	free(_stack);
 	_stack = newStackTop;
-}
-
-/* Function: printSymbolTable
- * Parameters: none
- * Description: Prints the symbol table to the screen.
- * Returns: none
- * Preconditions: The stack must not be empty.
- */
-void printSymbolTable() {
-	if (!_stack)
-		ERROR("PrintSymbolTable called on empty stack.", __LINE__, FALSE);
-
-	Symbol *currSymbol = NULL;
-	SymbolTable *currTable = NULL;
-	
-<<<<<<< src/aux/symbolTable.c
-	printf("|| SYMBOL TABLE || \n");
-=======
->>>>>>> src/aux/symbolTable.c.master
-	for(currTable = _stack; currTable; currTable = currTable->below) {
-		if (currTable->below)
-			printf("LOCAL SCOPE:\n");
-		else
-			printf("GLOBAL SCOPE:\n");
-		for(currSymbol = currTable->listHead; currSymbol; 
-				currSymbol = currSymbol->next) {
-			printf("\tSymbol: %s\n", currSymbol->identifier);
-			printf("\tType: %s\n", typeAsString(currSymbol->type));
-			
-			switch (currSymbol->type) {
-				case CHAR_TYPE:
-					printf("\tValue: %c\n", currSymbol->value.charVal);
-					break;
-				case INT_TYPE:
-					printf("\tValue: %d\n", currSymbol->value.intVal);
-					break;
-<<<<<<< src/aux/symbolTable.c
-				case FLOAT_TYPE:
-					printf("\tValue: %.2f\n", currSymbol->value.floatVal);
-					break;
-=======
->>>>>>> src/aux/symbolTable.c.master
-				default:
-					break;
-			}
-			
-			printf("\tFunctionType: %s\n", functionTypeAsString(currSymbol->functionType));
-			printf("\tParameters: ");
-			printParamList(currSymbol->parameterListHead);
-			printf("\n\n");
-		}
-	}
-}
-
-/* Function: typeAsString
- * Parameters: Type type
- * Description: Converts the enum Type to a string.
- * Returns: Returns the given type as a string.
- * Preconditions: none
- */
-char *typeAsString(Type type) {
-	if (type == CHAR_TYPE)
-		return "CHAR";
-	if (type == INT_TYPE)
-		return "INT";
-<<<<<<< src/aux/symbolTable.c
-	if (type == FLOAT_TYPE)
-		return "FLOAT";
-=======
->>>>>>> src/aux/symbolTable.c.master
-	if (type == CHAR_ARRAY)
-		return "CHAR_ARRAY";
-	if (type == INT_ARRAY)
-		return "INT_ARRAY";
-<<<<<<< src/aux/symbolTable.c
-	if (type == FLOAT_ARRAY)
-		return "FLOAT_ARRAY";
-=======
->>>>>>> src/aux/symbolTable.c.master
-	if (type == VOID_TYPE)
-		return "VOID";
-	if (type == BOOLEAN)
-		return "BOOLEAN";
-	if (type == UNKNOWN)
-		return "UNKNOWN";
-	
-	return "MISSING/UNRECOGNIZED";
-}
-
-/* Function: functionTypeAsString
- * Parameters: FunctionType functionType
- * Description: Converts the enum FunctionType to a string.
- * Returns: Returns the given functionType as a string.
- * Preconditions: none
- */
-char *functionTypeAsString(FunctionType functionType) {
-	if (functionType == EXTERN_TYPE)
-		return "EXTERN";
-	if (functionType == PROTOTYPE)
-		return "PROTOTYPE";
-	if (functionType == DEFINITION)
-		return "DEFINITION";
-	if (functionType == NON_FUNCTION)
-		return "NON_FUNCTION";
-	if (functionType == F_UNKNOWN)
-		return "UNKNOWN";
-	
-	return "MISSING/UNRECOGNIZED";
 }
 
 /* Function: printParamList
@@ -394,5 +266,101 @@ void printParamList(Parameter *parameterListHead) {
 	for(currParam = parameterListHead->next; currParam; currParam = currParam->next) {
 		printf("->%s", typeAsString(currParam->type));
 	}
+}
+
+/* Function: printSymbolTable
+ * Parameters: none
+ * Description: Prints the symbol table to the screen.
+ * Returns: none
+ * Preconditions: The stack must not be empty.
+ */
+void printSymbolTable() {
+	if (!_stack)
+		ERROR("PrintSymbolTable called on empty stack.", __LINE__, FALSE);
+
+	Symbol *currSymbol = NULL;
+	SymbolTable *currTable = NULL;
+	
+	printf("|| SYMBOL TABLE || \n");
+	for(currTable = _stack; currTable; currTable = currTable->below) {
+		if (currTable->below)
+			printf("LOCAL SCOPE:\n");
+		else
+			printf("GLOBAL SCOPE:\n");
+		for(currSymbol = currTable->listHead; currSymbol; 
+				currSymbol = currSymbol->next) {
+			printf("\tSymbol: %s\n", currSymbol->identifier);
+			printf("\tType: %s\n", typeAsString(currSymbol->type));
+			
+			switch (currSymbol->type) {
+				case CHAR_TYPE:
+					printf("\tValue: %c\n", currSymbol->value.charVal);
+					break;
+				case INT_TYPE:
+					printf("\tValue: %d\n", currSymbol->value.intVal);
+					break;
+				case FLOAT_TYPE:
+					printf("\tValue: %.2f\n", currSymbol->value.floatVal);
+					break;
+				default:
+					break;
+			}
+			
+			printf("\tFunctionType: %s\n", functionTypeAsString(currSymbol->functionType));
+			printf("\tParameters: ");
+			printParamList(currSymbol->parameterListHead);
+			printf("\n\n");
+		}
+	}
+}
+
+/* Function: typeAsString
+ * Parameters: Type type
+ * Description: Converts the enum Type to a string.
+ * Returns: Returns the given type as a string.
+ * Preconditions: none
+ */
+char *typeAsString(Type type) {
+	if (type == CHAR_TYPE)
+		return "CHAR";
+	else if (type == INT_TYPE)
+		return "INT";
+	else if (type == FLOAT_TYPE)
+		return "FLOAT";
+	else if (type == CHAR_ARRAY)
+		return "CHAR_ARRAY";
+	else if (type == INT_ARRAY)
+		return "INT_ARRAY";
+	else if (type == FLOAT_ARRAY)
+		return "FLOAT_ARRAY";
+	else if (type == VOID_TYPE)
+		return "VOID";
+	else if (type == BOOLEAN)
+		return "BOOLEAN";
+	else if (type == UNKNOWN)
+		return "UNKNOWN";
+	
+	return "MISSING/UNRECOGNIZED";
+}
+
+/* Function: functionTypeAsString
+ * Parameters: FunctionType functionType
+ * Description: Converts the enum FunctionType to a string.
+ * Returns: Returns the given functionType as a string.
+ * Preconditions: none
+ */
+char *functionTypeAsString(FunctionType functionType) {
+	if (functionType == EXTERN_TYPE)
+		return "EXTERN";
+	else if (functionType == PROTOTYPE)
+		return "PROTOTYPE";
+	else if (functionType == DEFINITION)
+		return "DEFINITION";
+	else if (functionType == NON_FUNCTION)
+		return "NON_FUNCTION";
+	else if (functionType == F_UNKNOWN)
+		return "UNKNOWN";
+	
+	return "MISSING/UNRECOGNIZED";
 }
 	
