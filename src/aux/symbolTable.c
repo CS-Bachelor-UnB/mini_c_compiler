@@ -1,3 +1,10 @@
+/* File: symbalTable.c 
+ * Author: Amr Gaber
+ * Created: 19/10/2010
+ * Last Modified: 27/11/2010
+ * Purpose: Symbol table for use with the C-- compiler.
+ */
+
 #include "symbolTable.h"
 #include "utilities.h"
 
@@ -228,7 +235,7 @@ void pop_symbolTable_fromStack() {
 	Parameter *rearp = NULL, *frontp = NULL;
 	SymbolTable *newStackTop = _stack->below;
 	
-	// if the symbol table has symbols at the top, free them first
+	// if the symbol table at the top has symbols, free them first
 	if (_stack->listHead) {
 		for(rear = _stack->listHead, front = rear->next; front; front = front->next) {
 			free(rear->identifier);
@@ -247,27 +254,6 @@ void pop_symbolTable_fromStack() {
 	_stack = newStackTop;
 }
 
-/* Function: printParamList
- * Parameters: Parameter *parameterListHead
- * Description: Prints the given parameter list to the screen.
- * Returns: none
- * Preconditions: none
- */
-void printParamList(Parameter *parameterListHead) {
-	if (!parameterListHead) {
-		printf("NONE");
-		return;
-	}
-	
-	Parameter *currParam = NULL;
-	
-	printf("%s", typeAsString(parameterListHead->type));
-	
-	for(currParam = parameterListHead->next; currParam; currParam = currParam->next) {
-		printf("->%s", typeAsString(currParam->type));
-	}
-}
-
 /* Function: printSymbolTable
  * Parameters: none
  * Description: Prints the symbol table to the screen.
@@ -281,7 +267,7 @@ void printSymbolTable() {
 	Symbol *currSymbol = NULL;
 	SymbolTable *currTable = NULL;
 	
-	printf("|| SYMBOL TABLE || \n");
+	printf("|| Symbol Table ||\n");
 	for(currTable = _stack; currTable; currTable = currTable->below) {
 		if (currTable->below)
 			printf("LOCAL SCOPE:\n");
@@ -300,7 +286,7 @@ void printSymbolTable() {
 					printf("\tValue: %d\n", currSymbol->value.intVal);
 					break;
 				case FLOAT_TYPE:
-					printf("\tValue: %.2f\n", currSymbol->value.floatVal);
+					printf("\tValue: %f\n", currSymbol->value.floatVal);
 					break;
 				default:
 					break;
@@ -323,21 +309,21 @@ void printSymbolTable() {
 char *typeAsString(Type type) {
 	if (type == CHAR_TYPE)
 		return "CHAR";
-	else if (type == INT_TYPE)
+	if (type == INT_TYPE)
 		return "INT";
-	else if (type == FLOAT_TYPE)
+	if (type == FLOAT_TYPE)
 		return "FLOAT";
-	else if (type == CHAR_ARRAY)
+	if (type == CHAR_ARRAY)
 		return "CHAR_ARRAY";
-	else if (type == INT_ARRAY)
+	if (type == INT_ARRAY)
 		return "INT_ARRAY";
-	else if (type == FLOAT_ARRAY)
+	if (type == FLOAT_ARRAY)
 		return "FLOAT_ARRAY";
-	else if (type == VOID_TYPE)
+	if (type == VOID_TYPE)
 		return "VOID";
-	else if (type == BOOLEAN)
+	if (type == BOOLEAN)
 		return "BOOLEAN";
-	else if (type == UNKNOWN)
+	if (type == UNKNOWN)
 		return "UNKNOWN";
 	
 	return "MISSING/UNRECOGNIZED";
@@ -352,15 +338,36 @@ char *typeAsString(Type type) {
 char *functionTypeAsString(FunctionType functionType) {
 	if (functionType == EXTERN_TYPE)
 		return "EXTERN";
-	else if (functionType == PROTOTYPE)
+	if (functionType == PROTOTYPE)
 		return "PROTOTYPE";
-	else if (functionType == DEFINITION)
+	if (functionType == DEFINITION)
 		return "DEFINITION";
-	else if (functionType == NON_FUNCTION)
+	if (functionType == NON_FUNCTION)
 		return "NON_FUNCTION";
-	else if (functionType == F_UNKNOWN)
+	if (functionType == F_UNKNOWN)
 		return "UNKNOWN";
 	
 	return "MISSING/UNRECOGNIZED";
+}
+
+/* Function: printParamList
+ * Parameters: Parameter *parameterListHead
+ * Description: Prints the given parameter list to the screen.
+ * Returns: none
+ * Preconditions: none
+ */
+void printParamList(Parameter *parameterListHead) {
+	if (!parameterListHead) {
+		printf("NONE");
+		return;
+	}
+	
+	Parameter *currParam = NULL;
+	
+	printf("%s", typeAsString(parameterListHead->type));
+	
+	for(currParam = parameterListHead->next; currParam; currParam = currParam->next) {
+		printf("->%s", typeAsString(currParam->type));
+	}
 }
 	

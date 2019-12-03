@@ -1,5 +1,3 @@
-extern void print_int(int n), print_string(char c[]);
-
 int foo(int foo_x, float foo_y);
 float bar(int bar_x, float bar_y);
 char doo(int doo_x, float doo_y);

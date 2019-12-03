@@ -118,6 +118,14 @@ void printCode(Code *code) {
 	} else {
 		printf("Destination: NONE\n");
 	}
+
+	// printf(
+	// 	"%s\t%s, %s, %s",
+	// 	opcodeAsString(code->opcode),
+	// 	code->destination->identifier,
+	// 	code->source1->identifier,
+	// 	code->source2->identifier
+	// );
 	
 	printf("\n");
 	printCode(code->next);
@@ -132,13 +140,13 @@ void printCode(Code *code) {
 char *opcodeAsString(Opcode opcode) {
 	switch (opcode) {
 		case ADD_OP:
-			return "+";
+			return "add";
 	 	case SUB_OP:
-			return "-";
+			return "sub";
 		case MULT_OP:
-			return "*";
+			return "mul";
 		case DIV_OP:
-			return "/";
+			return "div";
 		case NEG_OP:
 			return "NEGATION";
 		case NOT_OP:

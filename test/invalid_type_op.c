@@ -4,7 +4,7 @@
 */
 
 float foo(int x, char y) {
-    float z;
+    char z;
     z = x + y;
     return z;
 }

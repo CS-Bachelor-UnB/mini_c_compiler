@@ -1,5 +1,3 @@
-extern void print_str(char s[]), print_int(int i);
-
 int foo(int i) {
     return i;
 }

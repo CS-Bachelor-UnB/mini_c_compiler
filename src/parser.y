@@ -1,78 +1,78 @@
 %{
-	#include <ctype.h>
-	#include <stdio.h>
-	#include <stdlib.h>
-	#include <unistd.h>
-	#include "utilities.h"
-	#include "symbolTable.h"
-	#include "syntaxTree.h"
-	#include "functionCall.h"
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "utilities.h"
+#include "symbolTable.h"
+#include "syntaxTree.h"
+#include "code.h"
+#include "functionCall.h"
 
-	int DEBUG_ALL = 0;
-	int DEBUG_CODE = 0;
-	int DEBUG_SYNTAX = 0;
-	int DEBUG_SYMBOLS = 0;
+int print_code_header=1;
+int DEBUG_ALL = 0;
+int DEBUG_SYNTAX = 0;
+int DEBUG_SYMBOLS = 0;
 
-	int yylex();
-	void yyerror(const char *s);
+int yylex();
+void yyerror(char *s);
 
-	typedef struct TempVariable {
-		Symbol *symbol;
-		struct TempVariable *next;
-	} TempVariable;
+typedef struct TempVariable {
+	Symbol *symbol;
+	struct TempVariable *next;
+} TempVariable;
 
-	typedef struct StringLiteral {
-		Symbol 	*symbol;
-		struct StringLiteral *next;
-	} StringLiteral;
+typedef struct StringLiteral {
+	Symbol 	*symbol;
+	struct StringLiteral *next;
+} StringLiteral;
 
-	/************************
-	*						*
-	* 		prototypes		*
-	*						*
-	************************/
+/************************
+ *						*
+ * 		prototypes		*
+ *						*
+ ************************/
 
-	void 	typeError(char *errorMessage),
-			generateNewTempID(),
-			generateNewLabelID(),
-			declareGlobalVariables(SyntaxTree *tree),
-			writeCode(Code *code),
-			insertStringLiteral(Symbol *stringLiteral),
-			popStringLiterals(StringLiteral *stringLiteral),
-			insertTempVariable(Symbol *tempVariable),
-			popTempVariables(TempVariable *tempVariable),
-			writeExpressionCode(char *mnemonic, char *operator, Code *code);
-	char	isStringLiteral(Symbol *target);
-	int		allocateStackSpace(SyntaxTree *declaration, int offset);
-	Symbol	*recallStringLiteral(char *string);
-	Code	*constructCode(SyntaxTree *tree);
+void 	typeError(char *errorMessage),
+		generateNewTempID(),
+		generateNewLabelID(),
+		declareGlobalVariables(SyntaxTree *tree),
+		insertStringLiteral(Symbol *stringLiteral),
+		popStringLiterals(StringLiteral *stringLiteral),
+		insertTempVariable(Symbol *tempVariable),
+		popTempVariables(TempVariable *tempVariable),
+		writeExpressionCode(char *mnemonic, char *operator, Code *code);
+char	isStringLiteral(Symbol *target);
+int		allocateStackSpace(SyntaxTree *declaration, int offset);
+Symbol	*recallStringLiteral(char *string);
+Code	*constructCode(SyntaxTree *tree);
 
-	/************************
-	*						*
-	*	global variables	*
-	*						*
-	************************/
+/************************
+ *						*
+ *	global variables	*
+ *						*
+ ************************/
 
-	extern int yylineno;
-	extern char *yytext;
-	extern FunctionCall	*_callStack;
-	char	*_currID = NULL,
-			*_currFID = NULL,
-			_returnedValue = 0,
-			_generateCode = 1,
-			_errorMessage[255],
-			_tempID[15],				// up to 10 billion temps > unsigned int max
-			_labelID[16];				// up to 10 billion labels > unsigned int max
-	unsigned int	_tempNum = 0,
-					_labelNum = 0,
-					_offset = 0,
-					_stackSize = 0;
-	Type	_currType = UNKNOWN,
-			_currPType = UNKNOWN;
-	FunctionType _currFType = F_UNKNOWN;
-	Parameter *_currParam = NULL;
-	StringLiteral *_stringLiterals = NULL;
-	TempVariable *_tempVariables = NULL;
+extern int yylineno;
+extern char *yytext;
+extern FunctionCall	*_callStack;
+char	*_currID = NULL,
+		*_currFID = NULL,
+		_returnedValue = FALSE,
+		_generateCode = TRUE,
+		_errorMessage[255],
+		_tempID[15],				// up to 10 billion temps > unsigned int max
+		_labelID[16];				// up to 10 billion labels > unsigned int max
+unsigned int	_tempNum = 0,
+				_labelNum = 0,
+				_offset = 0,
+				_stackSize = 0;
+Type	_currType = UNKNOWN,
+		_currPType = UNKNOWN;
+FunctionType _currFType = F_UNKNOWN;
+Parameter *_currParam = NULL;
+StringLiteral *_stringLiterals = NULL;
+TempVariable *_tempVariables = NULL;
 %}
 
 %union {
@@ -113,809 +113,669 @@
 %%
 
 program:	  program declaration ';'
-			| program function
-			
-			/* error productions */
-			| program declaration error { yyerrok; } /* missing semicolon */
-			| error ';' { yyerrok; } 
+            | program function
 
-			| /* empty */
-	    	;
+            /* error productions */
+            | program declaration error { yyerrok; } /* missing semicolon */
+            | error ';' { yyerrok; }
+
+            | /* empty */
+            ;
 
 declaration:  type varDcl multiVarDcl
-			{
-			  printf(".data\n\n");
-			  SyntaxTree *declarations = createTree(DECLARATION, NULL, $2, $3);
-			  declareGlobalVariables(declarations);
-			  printf("\n");
-			  destroyTree(declarations);
-			}
-			| storeExtern type storeFID '(' insertFunc paramTypes ')'
-				multiProtDcl makeProt { _currFType = F_UNKNOWN; }
-			| type storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt { _currFType = F_UNKNOWN; }
-			| storeExtern storeVoid storeFID '(' insertFunc paramTypes ')'
-			    multiProtDcl makeProt { _currFType = F_UNKNOWN; }
-			| storeVoid storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt { _currFType = F_UNKNOWN; }
-			;
-			
+            {
+              SyntaxTree *declarations = createTree(DECLARATION, NULL, $2, $3);
+              printf("\n");
+              destroyTree(declarations);
+            }
+            | storeExtern type storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt { _currFType = F_UNKNOWN; }
+            | type storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt { _currFType = F_UNKNOWN; }
+            | storeExtern storeVoid storeFID '(' insertFunc paramTypes ')'
+                multiProtDcl makeProt { _currFType = F_UNKNOWN; }
+            | storeVoid storeFID '(' insertFunc paramTypes ')' multiProtDcl makeProt { _currFType = F_UNKNOWN; }
+            ;
+
 storeFID:	  ID
-			{
-			  _currFID = $1;
-			};
+            {
+              _currFID = $1;
+            };
 
 storeID:	  ID
-			{
-			  _currID = $1;
-			  $$ = $1;
-			};
+            {
+              _currID = $1;
+              $$ = $1;
+            };
 
 storeExtern:  EXTERN
-			{
-			  _currFType = EXTERN_TYPE;
-			};
+            {
+              _currFType = EXTERN_TYPE;
+            };
 
 storeVoid:	  VOID
-			{
-			  _currType = VOID_TYPE;
-			};
+            {
+              _currType = VOID_TYPE;
+            };
 
 makeProt:	{
-			  Symbol *prevDcl = recallGlobal(_currFID);
-	
-			  if (prevDcl->functionType == PROTOTYPE || prevDcl->functionType == EXTERN_TYPE) {
-				  sprintf(_errorMessage, "prototype %s previously declared",
-					  _currFID);
-			      typeError(_errorMessage);
-			  } else {
-				  if (_currFType == EXTERN_TYPE)
-					  prevDcl->functionType = EXTERN_TYPE;
-				  else
-				      prevDcl->functionType = PROTOTYPE;
-			  }
-			
-			  pop_symbolTable_fromStack();
-			}
-			;
+              Symbol *prevDcl = recallGlobal(_currFID);
+
+              if (prevDcl->functionType == PROTOTYPE || prevDcl->functionType == EXTERN_TYPE) {
+                  sprintf(_errorMessage, "prototype %s previously declared",
+                      _currFID);
+                  typeError(_errorMessage);
+              } else {
+                  if (_currFType == EXTERN_TYPE)
+                      prevDcl->functionType = EXTERN_TYPE;
+                  else
+                      prevDcl->functionType = PROTOTYPE;
+              }
+
+              pop_symbolTable_fromStack();
+            }
+            ;
 
 multiProtDcl: multiProtDcl ',' makeProt storeFID '(' insertFunc paramTypes ')'
-			| /* empty */
-			;
+            | /* empty */
+            ;
 
 multiVarDcl:  multiVarDcl ',' varDcl { $3->left = $1; $$ = $3; }
-			| /* empty */ { $$ = NULL; }
-			;
+            | /* empty */ { $$ = NULL; }
+            ;
 
 varDcl:	  	  ID
-			{
-			  _currID = $1;
-			
-			  if (recallLocal(_currID)) {
-				  sprintf(_errorMessage, "%s previously declared in this function",
-					  _currID);
-			      typeError(_errorMessage);
-				  $$ = NULL;
-			  } else {
-			  	  Symbol *currSymbol = insert(_currID, _currType);
-				  currSymbol->functionType = NON_FUNCTION;
-				  $$ = createTree(DECLARATION, currSymbol, NULL, NULL);
-			  }
-			}
-			| ID '[' INTCON ']'
-			{
-				_currID = $1;
-			
-				if (_currType == CHAR_TYPE)
-					_currType = CHAR_ARRAY;
-				else if (_currType == INT_TYPE)
-					_currType = INT_ARRAY;
-				else if (_currType == FLOAT_TYPE)
-                    _currType = FLOAT_ARRAY;
-			
-				if (recallLocal(_currID)) {
-					sprintf(_errorMessage, "%s previously declared in this function",
-						_currID);
-					typeError(_errorMessage);
-					$$ = NULL;
-				} else {
-					Symbol *currSymbol = insert(_currID, _currType);
-					currSymbol->functionType = NON_FUNCTION;
-					currSymbol->value.intVal = $3;
-					$$ = createTree(DECLARATION, currSymbol, NULL, NULL);
-				}
-				
-				if (_currType == CHAR_ARRAY)
-					_currType = CHAR_TYPE;
-				else if (_currType == INT_ARRAY)
-					_currType = INT_TYPE;
-				else if (_currType == FLOAT_TYPE)
-                    _currType = FLOAT_ARRAY;
-			}
-			;
+            {
+              _currID = $1;
 
-type:		  CHAR
-			{
-				_currType = CHAR_TYPE;
-			}
-			| INT
-			{
-				_currType = INT_TYPE;
-			}
-			| FLOAT
+              if (recallLocal(_currID)) {
+                  sprintf(_errorMessage, "%s previously declared in this function", _currID);
+                  typeError(_errorMessage);
+                  $$ = NULL;
+              } else {
+                    Symbol *currSymbol = insert(_currID, _currType);
+                  currSymbol->functionType = NON_FUNCTION;
+                  $$ = createTree(DECLARATION, currSymbol, NULL, NULL);
+              }
+            }
+            | ID '[' INTCON ']'
+            {
+                _currID = $1;
+
+                if (_currType == CHAR_TYPE)
+                    _currType = CHAR_ARRAY;
+                else if (_currType == INT_TYPE)
+                    _currType = INT_ARRAY;
+                else if (_currType == FLOAT_TYPE)
+                    _currType = FLOAT_ARRAY;
+
+
+
+                if (recallLocal(_currID)) {
+                    sprintf(_errorMessage, "%s previously declared in this function", _currID);
+                    typeError(_errorMessage);
+                    $$ = NULL;
+                } else {
+                    Symbol *currSymbol = insert(_currID, _currType);
+                    currSymbol->functionType = NON_FUNCTION;
+                    currSymbol->value.intVal = $3;
+                    $$ = createTree(DECLARATION, currSymbol, NULL, NULL);
+                }
+
+                if (_currType == CHAR_ARRAY)
+                    _currType = CHAR_TYPE;
+                else if (_currType == INT_ARRAY)
+                    _currType = INT_TYPE;
+                else if (_currType == FLOAT_ARRAY)
+                    _currType = FLOAT_TYPE;
+            }
+            ;
+
+type:		CHAR
+            {
+                _currType = CHAR_TYPE;
+            }
+            | INT
+            {
+                _currType = INT_TYPE;
+            }
+            | FLOAT
             {
                 _currType = FLOAT_TYPE;
             }
-			;
+            ;
 
-initParam:	{ 
-				Symbol *currSymbol = recallGlobal(_currFID);
-				
-				if (currSymbol)
-					_currParam = currSymbol->parameterListHead;
-			};
-
+initParam: {
+  Symbol *currSymbol = recallGlobal(_currFID);
+  if (currSymbol)
+    _currParam = currSymbol->parameterListHead;};
 paramTypes:   initParam VOID
-			{
-				Symbol *currentFunction = recallGlobal(_currFID);
-			
-				if (_currParam) {
-					if (_currParam->type != VOID_TYPE)
-						typeError("Type mismatch: non-VOID parameter(s) expected");
-				} else {
-					addParameter(NULL, VOID_TYPE, currentFunction);
-				}
+            {
+              Symbol *currentFunction = recallGlobal(_currFID);
 
-				_currParam = NULL;
-				
-				$$ = NULL;
-			}
-			| initParam arrayTypeOpt multiParam
-			{
-				if (_currParam)
-					typeError("Type mismatch: missing previously declared types");
-				
-				_currParam = NULL;
-				
-				
-				SyntaxTree *tree = $3;
-				
-				if (tree) {
-					while (tree->left)
-						tree = tree->left;
-				
-					tree->left = $2;
-					$$ = $3;
-				} else {
-					$$ = $2;
-				}
-			  
-			};
+            if (_currParam) {
+                   if (_currParam->type != VOID_TYPE)
+                        typeError("Type mismatch: non-VOID parameter(s) expected");
+              } else {
+                  addParameter(NULL, VOID_TYPE, currentFunction);
+              }
 
-storePType: CHAR
-			{
-				_currPType = CHAR_TYPE;
-			}
-			| INT
-			{
-				_currPType = INT_TYPE;
-			}
-			| FLOAT
+              _currParam = NULL;
+
+              $$ = NULL;
+            }
+            | initParam arrayTypeOpt multiParam
+            {
+              if (_currParam)
+                  typeError("Type mismatch: missing previously declared types");
+
+              _currParam = NULL;
+
+
+              SyntaxTree *tree = $3;
+
+              if (tree) {
+                  while (tree->left)
+                      tree = tree->left;
+
+                    tree->left = $2;
+                  $$ = $3;
+              } else {
+                  $$ = $2;
+              }
+
+            };
+
+storePType:	CHAR
+            {
+                _currPType = CHAR_TYPE;
+            }
+            | INT
+            {
+                _currPType = INT_TYPE;
+            }
+            | FLOAT
             {
                 _currPType = FLOAT_TYPE;
             }
-			;
+            ;
 
 arrayTypeOpt: storePType ID
-			{
-			  _currID = $2;
-			
-			  Symbol *currentFunction = recallGlobal(_currFID);
-			
-			    if (recallLocal(_currID)) {
-				  sprintf(_errorMessage, "%s previously declared in this function",
-					  _currID);
-			      typeError(_errorMessage);
-				  $$ = NULL;
-			    } else {
-			  	  	if (_currParam) {
-					  	if (_currParam->type != _currPType) {
-							sprintf(_errorMessage, "%s does not match previous declaration",
-								typeAsString(_currPType));
-							typeError(_errorMessage);
-							$$ = NULL;
-						} else {
-							Symbol *currSymbol = insert(_currID, _currPType);
-						    currSymbol->functionType = NON_FUNCTION;
-							$$ = createTree(FORMAL, currSymbol, NULL, NULL);
-						}
-			  	 	} else {
-				  		Symbol *currSymbol = addParameter(_currID, _currPType, currentFunction);
-					    currSymbol->functionType = NON_FUNCTION;
-						$$ = createTree(FORMAL, currSymbol, NULL, NULL);
-			  		}
-				}
-				
-			  if (_currParam)
-			  	  _currParam = _currParam->next;
-			}
-			| storePType ID '['']'
-			{
-			  _currID = $2;
-			  Symbol *currentFunction = recallGlobal(_currFID);
-			
-			  if (_currPType == CHAR_TYPE)
-				  _currPType = CHAR_ARRAY;
-			  else
-			      _currPType = INT_ARRAY;
-			
-			  if (recallLocal(_currID)) {
-				  sprintf(_errorMessage, "%s previously declared in this function",
-					  _currID);
-			      typeError(_errorMessage);
-				  $$ = NULL;
-			  } else {
-			  	  if (_currParam) {
-					  if (_currParam->type != _currPType) {
-						  if (_currPType == CHAR_ARRAY)
-							  typeError("CHAR_ARRAY does not match previous declaration");
-						  else
-							  typeError("INT_ARRAY does not match previous declaration");
-						  
-						  $$ = NULL;
-					  } else {
-						  Symbol *currSymbol = insert(_currID, _currPType);
-						  currSymbol->functionType = NON_FUNCTION;
-						  $$ = createTree(FORMAL, currSymbol, NULL, NULL);
-					  }
-			  	  } else {
-				  	  Symbol *currSymbol = addParameter(_currID, _currPType, currentFunction);
-					  currSymbol->functionType = NON_FUNCTION;
-					  $$ = createTree(FORMAL, currSymbol, NULL, NULL);
-			  	  }
-			  }
-			
-			 if (_currParam)
-			   _currParam = _currParam->next;
-			}
-			;
+            {
+              _currID = $2;
+
+              Symbol *currentFunction = recallGlobal(_currFID);
+
+                if (recallLocal(_currID)) {
+                  sprintf(_errorMessage, "%s previously declared in this function",
+                      _currID);
+                  typeError(_errorMessage);
+                  $$ = NULL;
+                } else {
+                        if (_currParam) {
+                          if (_currParam->type != _currPType) {
+                            sprintf(_errorMessage, "%s does not match previous declaration",
+                                typeAsString(_currPType));
+                            typeError(_errorMessage);
+                            $$ = NULL;
+                        } else {
+                            Symbol *currSymbol = insert(_currID, _currPType);
+                            currSymbol->functionType = NON_FUNCTION;
+                            $$ = createTree(FORMAL, currSymbol, NULL, NULL);
+                        }
+                       } else {
+                          Symbol *currSymbol = addParameter(_currID, _currPType, currentFunction);
+                        currSymbol->functionType = NON_FUNCTION;
+                        $$ = createTree(FORMAL, currSymbol, NULL, NULL);
+                      }
+                }
+
+              if (_currParam)
+                    _currParam = _currParam->next;
+            }
+            | storePType ID '['']'
+            {
+              _currID = $2;
+              Symbol *currentFunction = recallGlobal(_currFID);
+
+              if (_currPType == CHAR_TYPE)
+                  _currPType = CHAR_ARRAY;
+              else
+                  _currPType = INT_ARRAY;
+
+              if (recallLocal(_currID)) {
+                  sprintf(_errorMessage, "%s previously declared in this function",
+                      _currID);
+                  typeError(_errorMessage);
+                  $$ = NULL;
+              } else {
+                    if (_currParam) {
+                      if (_currParam->type != _currPType) {
+                          if (_currPType == CHAR_ARRAY)
+                              typeError("CHAR_ARRAY does not match previous declaration");
+                          else
+                              typeError("INT_ARRAY does not match previous declaration");
+
+                          $$ = NULL;
+                      } else {
+                          Symbol *currSymbol = insert(_currID, _currPType);
+                          currSymbol->functionType = NON_FUNCTION;
+                          $$ = createTree(FORMAL, currSymbol, NULL, NULL);
+                      }
+                    } else {
+                        Symbol *currSymbol = addParameter(_currID, _currPType, currentFunction);
+                      currSymbol->functionType = NON_FUNCTION;
+                      $$ = createTree(FORMAL, currSymbol, NULL, NULL);
+                    }
+              }
+
+             if (_currParam)
+               _currParam = _currParam->next;
+            }
+            ;
 
 multiParam:   multiParam ',' arrayTypeOpt { $3->left = $1; $$ = $3; }
-			| /* empty */ { $$ = NULL; }
-			;
+            | /* empty */ { $$ = NULL; }
+            ;
 
 insertFunc:	{
-			  Symbol *prevDcl = recallGlobal(_currFID);
+              Symbol *prevDcl = recallGlobal(_currFID);
 
-			  if (prevDcl) {
-			      if (prevDcl->functionType == DEFINITION) {
-				      sprintf(_errorMessage, "function %s previously defined",
-						  prevDcl->identifier);
-			          typeError(_errorMessage);
-			      } else if (prevDcl->functionType == EXTERN_TYPE) {
-					  sprintf(_errorMessage, "function %s previously declared as extern",
-						  prevDcl->identifier);
-			          typeError(_errorMessage);
-				  } else if (prevDcl->functionType == NON_FUNCTION) {
-					  sprintf(_errorMessage, "function %s previously declared",
-						  prevDcl->identifier);
-					  typeError(_errorMessage);
-				  } else if (prevDcl->type != _currType) {
-					  sprintf(_errorMessage, "return type of function %s doesn't match previous declaration",
-						  prevDcl->identifier);
-				      typeError(_errorMessage);
-				  }
-			  } else {
-				      Symbol *currFunction = insert(_currFID, _currType);
-					  currFunction->functionType = DEFINITION;
-			  }
-			
-			  push_symbolTable_toStack();
-			}
-			;
+              if (prevDcl) {
+                  if (prevDcl->functionType == DEFINITION) {
+                      sprintf(_errorMessage, "function %s previously defined", prevDcl->identifier);
+                    typeError(_errorMessage);
+                  } else if (prevDcl->functionType == EXTERN_TYPE) {
+                        sprintf(_errorMessage, "function %s previously declared as extern", prevDcl->identifier);
+                        typeError(_errorMessage);
+                  } else if (prevDcl->functionType == NON_FUNCTION) {
+                        sprintf(_errorMessage, "function %s previously declared",prevDcl->identifier);
+                        typeError(_errorMessage);
+                  } else if (prevDcl->type != _currType) {
+                        sprintf(_errorMessage, "return type of function %s doesn't match previous declaration", prevDcl->identifier);
+                        typeError(_errorMessage);
+                  }
+              } else {
+                    Symbol *currFunction = insert(_currFID, _currType);
+                      currFunction->functionType = DEFINITION;
+              }
+
+              push_symbolTable_toStack();
+            }
+            ;
 
 function:	  type storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl
-			  	  statementOpt '}'
-			{ 
-			  if (!_returnedValue) {
-				  sprintf(_errorMessage, "function %s must have at least one return statement",
-					  _currFID);
-				  typeError(_errorMessage);
-			  } else {
-				  _returnedValue = FALSE;
-			  }
-			  
-			  Symbol *currFunction = recallGlobal(_currFID);
+                    statementOpt '}'
+            {
+              if (!_returnedValue) {
+                  sprintf(_errorMessage, "function %s must have at least one return statement", _currFID);
+                  typeError(_errorMessage);
+              } else {
+                  _returnedValue = FALSE;
+              }
 
-			  SyntaxTree *declarations = $8;
+              Symbol *currFunction = recallGlobal(_currFID);
 
-			  if (declarations) {
-				  while (declarations->left)
-					  declarations = declarations->left;
+              SyntaxTree *declarations = $8;
 
-				  declarations->left = $5;
-			  } else {
-				  $8 = $5;
-			  }
+              if (declarations) {
+                  while (declarations->left)
+                      declarations = declarations->left;
 
-			  SyntaxTree *function = createTree(FUNCTION_ROOT, currFunction, $8, $9);
+                  declarations->left = $5;
+              } else {
+                  $8 = $5;
+              }
 
-			//   printf("\n.text\n\n");
+              SyntaxTree *function = createTree(FUNCTION_ROOT, currFunction, $8, $9);
 
-				if (DEBUG_SYNTAX || DEBUG_ALL) {
-					printf("\nSYNTAX TREE:\n\n");
-					printSyntaxTree(function, 0);
-				}
-
-			  if (DEBUG_SYMBOLS || DEBUG_ALL) 
-			  	  printSymbolTable();
-
-			  if (strcmp("main", _currFID) == 0)
-				  printf("main:\n");
-			  else
-				  printf("_%s:\n", _currFID);
-
-			  _stackSize = 8;
-			  _stackSize += allocateStackSpace(function, 0);
-
-			  printf("\tsubu\t$sp, $sp, %d\n", _stackSize);
-			  printf("\tsw\t\t$ra, %d($sp)\n", _stackSize - 4);
-			  printf("\tsw\t\t$fp, %d($sp)\n", _stackSize - 8);
-			  printf("\taddu\t$fp, $sp, %d\n", _stackSize);
-
-			  SyntaxTree *parameter = $5;
-			  SyntaxTree *parameterName = $5;
-			  unsigned int i, j, k, l;
-			  i = j = k = l = 0;
-			  for(i = 12, j = 0; parameter; i += 4, j += 4) {
-
-					// this 'if' is just to get the parameter names in order
-					l = 0;
-					parameterName = $5;
-				    if (k == 0 && parameterName == parameter) {
-						while (parameterName->left) {
-							parameterName = parameterName->left;
-							k++;
-						}
-						k--;
-					} else {
-						while (l < k) {
-							parameterName = parameterName->left;
-							l++;
-						}
-						k--;
-					}
-
-					if (parameter->symbol->type == CHAR_TYPE) {
-						printf("\tlb\t\t$t0, %d($fp)\t\t# storing parameter %s\n", j, parameterName->symbol->identifier);
-						printf("\tsb\t\t$t0, %d($sp)\n", _stackSize - i);
-					} else {
-						printf("\tlw\t\t$t0, %d($fp)\t\t# storing parameter %s\n", j, parameterName->symbol->identifier);
-						printf("\tsw\t\t$t0, %d($sp)\n", _stackSize - i);
-					}
-					
-					if (parameter->symbol->type == CHAR_ARRAY || parameter->symbol->type == INT_ARRAY)
-						parameter->symbol->reference = TRUE;
-
-					parameter = parameter->left;
-			  }
-
-			  if (i <= _stackSize) {
-			  	  printf("\t# initializing local variables\n");
-
-				  for( ; i <= _stackSize; i += 4)
-					  printf("\tsw\t\t$0, %d($sp)\n", _stackSize - i);
-			  }
-
-				Code *code = constructCode(function);
-				writeCode(code);
-
-				if (DEBUG_CODE || DEBUG_ALL) {
-					printf("\nTHREE ADDRESS CODE:\n\n");
-					printCode(code);
-				}
-
-			//   printf("\n__%sReturn:\n", _currFID);
-			//   printf("\tlw\t\t$fp, %d($sp)\n", _stackSize - 8);
-			//   printf("\tlw\t\t$ra, %d($sp)\n", _stackSize - 4);
-			//   printf("\taddu\t$sp, $sp, %d\n", _stackSize);
-			//   printf("\tjr\t\t$ra\n");
-
-			  destroyTree(function);
-			  destroyCode(code);
-			  pop_symbolTable_fromStack();
-			}
-			| storeVoid storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl
-				  statementOpt '}' 
-			{ 
-			  Symbol *currFunction = recallGlobal(_currFID);
-							
-			  SyntaxTree *declarations = $8;
-			
-			  if (declarations) {
-				  while (declarations->left)
-					  declarations = declarations->left;
-					
-				  declarations->left = $5;
-			  } else {
-				  $8 = $5;
-			  }
-			
-			  SyntaxTree *function = createTree(FUNCTION_ROOT, currFunction, $8, $9);
-			
-			//   printf("\n.text\n\n");
-			
-				if (DEBUG_SYNTAX || DEBUG_ALL) {
-					printf("\nSYNTAX TREE:\n\n");
-					printSyntaxTree(function, 0);
-				}
+              if (strcmp("main", _currFID) == 0)
+					printf("=================================\nmain:\n\n");
+				else
+					printf("=================================\n%s:\n\n", _currFID);
 
 				if (DEBUG_SYMBOLS || DEBUG_ALL)
 					printSymbolTable();
-			
-			  if (strcmp("main", _currFID) == 0)
-				  printf("main:\n");
-			  else
-				  printf("_%s:\n", _currFID);
-			
-			  _stackSize = 8;
-			  _stackSize += allocateStackSpace(function, 0);
-
-			  printf("\tsubu\t$sp, $sp, %d\n", _stackSize);
-			  printf("\tsw\t\t$ra, %d($sp)\n", _stackSize - 4);
-			  printf("\tsw\t\t$fp, %d($sp)\n", _stackSize - 8);
-			  printf("\taddu\t$fp, $sp, %d\n", _stackSize);
-			  
-			  SyntaxTree *parameter = $5;
-			  SyntaxTree *parameterName = $5;
-			  unsigned int i, j, k, l;
-			  i = j = k = l = 0;
-			  for(i = 12, j = 0; parameter; i += 4, j += 4) {
-					
-					// this 'if' is just to get the parameter names in order
-					l = 0;
-					parameterName = $5;
-				    if (k == 0 && parameterName == parameter) {
-						while (parameterName->left) {
-							parameterName = parameterName->left;
-							k++;
-						}
-						k--;
-					} else {
-						while (l < k) {
-							parameterName = parameterName->left;
-							l++;
-						}
-						k--;
-					}
-				
-					if (parameter->symbol->type == CHAR_TYPE) {
-						printf("\tlb\t\t$t0, %d($fp)\t\t# storing parameter %s\n", j, parameterName->symbol->identifier);
-						printf("\tsb\t\t$t0, %d($sp)\n", _stackSize - i);
-					} else {
-						printf("\tlw\t\t$t0, %d($fp)\t\t# storing parameter %s\n", j, parameterName->symbol->identifier);
-						printf("\tsw\t\t$t0, %d($sp)\n", _stackSize - i);
-					}
-					
-					if (parameter->symbol->type == CHAR_ARRAY || parameter->symbol->type == INT_ARRAY)
-						parameter->symbol->reference = TRUE;
-						
-					parameter = parameter->left;
-			  }
-			  
-			  if (i <= _stackSize) {
-			  	  printf("\t# initializing local variables\n");
-			
-				  for( ; i <= _stackSize; i += 4)
-					  printf("\tsw\t\t$0, %d($sp)\n", _stackSize - i);
-			  }
-
-				Code *code = constructCode(function);
-				writeCode(code);
-			  
-				if (DEBUG_CODE || DEBUG_ALL) {
-					printf("\nTHREE ADDRESS CODE:\n\n");
-					printCode(code);
+				if (DEBUG_SYNTAX || DEBUG_ALL) {
+					printf("\nSYNTAX TREE:\n\n");
+					printSyntaxTree(function, 0);
 				}
-			
-			//   printf("\n__%sReturn:\n", _currFID);
-			//   printf("\tlw\t\t$fp, %d($sp)\n", _stackSize - 8);
-			//   printf("\tlw\t\t$ra, %d($sp)\n", _stackSize - 4);
-			//   printf("\taddu\t$sp, $sp, %d\n", _stackSize);
-			//   printf("\tjr\t\t$ra\n");
+				
+				printf("|| Three Address Code ||\n");
+				Code *code = constructCode(function);
+				printCode(code);
 
-			  destroyTree(function);
-			  destroyCode(code);
-			  pop_symbolTable_fromStack();
-			}
-			;
+				destroyTree(function);
+				destroyCode(code);
+				pop_symbolTable_fromStack();
+            }
+            | storeVoid storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl
+                  statementOpt '}'
+            {
+              Symbol *currFunction = recallGlobal(_currFID);
+
+              SyntaxTree *declarations = $8;
+
+              if (declarations) {
+                  while (declarations->left)
+                      declarations = declarations->left;
+
+                  declarations->left = $5;
+              } else {
+                  $8 = $5;
+              }
+
+              SyntaxTree *function = createTree(FUNCTION_ROOT, currFunction, $8, $9);
+
+              if (strcmp("main", _currFID) == 0)
+					printf("=================================\nmain:\n\n");
+				else
+					printf("=================================\n%s:\n\n", _currFID);
+
+				if (DEBUG_SYMBOLS || DEBUG_ALL)
+					printSymbolTable();
+				if (DEBUG_SYNTAX || DEBUG_ALL) {
+					printf("\nSYNTAX TREE:\n\n");
+					printSyntaxTree(function, 0);
+				}
+				
+				printf("|| Three Address Code ||\n");
+				Code *code = constructCode(function);
+				printCode(code);
+
+				destroyTree(function);
+				destroyCode(code);
+				pop_symbolTable_fromStack();
+            }
+            ;
 
 multiTypeDcl: multiTypeDcl type varDcl multiVarDcl ';'
-			{
-				SyntaxTree *tree = $4;
-				
-				if (tree) {
-					
-					while (tree->left)
-						tree = tree->left;
-					
-					tree->left = $3;
-					$3->left = $1;
-					$$ = $4;
-				} else {
-					$3->left = $1;
-					$$ = $3;
-				}
-			}
+            {
+                SyntaxTree *tree = $4;
 
-			/* error productions */
-			| multiTypeDcl type error ';' { yyerrok; $$ = NULL; }
+                if (tree) {
 
-			| /* empty */ { $$ = NULL; }
-			;
+                    while (tree->left)
+                        tree = tree->left;
+
+                    tree->left = $3;
+                    $3->left = $1;
+                    $$ = $4;
+                } else {
+                    $3->left = $1;
+                    $$ = $3;
+                }
+            }
+
+            /* error productions */
+            | multiTypeDcl type error ';' { yyerrok; $$ = NULL; }
+
+            | /* empty */ { $$ = NULL; }
+            ;
 
 statement:	  IF '(' expr ')' statement
-			{
-			  if ($3.type != BOOLEAN)
-				  typeError("conditional in if statement must be a boolean");
-			  
-			  $$ = createTree(IF_TREE, NULL, $3.tree, $5);
-			}
-			| IF '(' expr ')' statement ELSE statement
-			{
-			  if ($3.type != BOOLEAN)
-				  typeError("conditional in if statement must be a boolean");
-				
-				$$ = createTree(IF_TREE, NULL, $3.tree, $5);
-				$$->opt = $7;
-			}
-			| WHILE '(' expr ')' statement
-			{
-			  if ($3.type != BOOLEAN)
-				  typeError("conditional in while loop must be a boolean");
-				
-			  $$ = createTree(WHILE_TREE, NULL, $3.tree, $5);
-			}
-			| FOR '(' assgOpt ';' exprOpt ';' assgOpt ')' statement
-			{
-			  if ($5.type != BOOLEAN)
-				  typeError("conditional in for loop must be a boolean");
-				
-			SyntaxTree *tree = createTree(WHILE_TREE, NULL, $5.tree, $9);
-			tree->opt = $7;
-			$$ = createTree(STATEMENT, NULL, tree, $3);
-			}
-			| RETURN expr ';'
-			{
-			  Symbol *currSymbol = recallGlobal(_currFID);
-			
-			  if (!currSymbol) {
-				  typeError("unexpected return statement");
-				  $$ = NULL;
-			  } else {
-				  	if (currSymbol->type != $2.type) {
-						if (((currSymbol->type != INT_TYPE && currSymbol->type != CHAR_TYPE && currSymbol->type != FLOAT_TYPE)
-						|| ($2.type != INT_TYPE && $2.type != CHAR_TYPE && $2.type != FLOAT_TYPE))) {
-								sprintf(_errorMessage, "return type for function %s does not match declared type", _currFID);
-							typeError(_errorMessage);
-						} else {
-						_returnedValue = TRUE;
-						}
-					} else {
-						_returnedValue = TRUE;
-					}
-				
-				  $$ = createTree(RETURN_TREE, currSymbol, $2.tree, NULL);
-			  }
-			}
-			| RETURN ';'
-			{
-			  Symbol *currSymbol = recallGlobal(_currFID);
-			
-			  if (!currSymbol) {
-				  typeError("unexpected return statement");
-				  $$ = NULL;
-			  } else {
-				  if (currSymbol->type != VOID_TYPE) {
-					  sprintf(_errorMessage, "return type for function %s does not match declared type",
-						  _currFID);
-					  typeError(_errorMessage);
-				  }
-				
-				  $$ = createTree(RETURN_TREE, currSymbol, NULL, NULL);
-			  }
-			
-			  
-			}
-			| assignment ';' { $$ = $1; }
-			| storeID '('')' ';'
-			{
-			  Symbol *currSymbol = recallGlobal(_currID);
-			  
-			  if (currSymbol) {
-			      if (!currSymbol->parameterListHead) {
-					  sprintf(_errorMessage, "%s is not a function", _currID);
-				      typeError(_errorMessage);
-				  }
-			
-			      else if (currSymbol->parameterListHead->type != VOID_TYPE) {
-			          sprintf(_errorMessage, "function %s takes non-VOID arguments",
-						  _currID);
-			   	      typeError(_errorMessage);
-				  }
-				  
-				  if (currSymbol->type != VOID_TYPE) {
-					  sprintf(_errorMessage, "function %s must return VOID to be used as a statement",
-						  _currID);
-				      typeError(_errorMessage);
-				  }
-				  
-				  $$ = createTree(FUNCTION_CALL, currSymbol, NULL, NULL);
-			  } else {
-				  sprintf(_errorMessage, "%s undefined", _currID);
-			      typeError(_errorMessage);
-				  $$ = NULL;
-			  }
-			
-			}
-			| storeID '('
-			{
-			  Symbol *currSymbol = recallGlobal(_currID);
+            {
+              if ($3.type != BOOLEAN)
+                  typeError("conditional in if statement must be a boolean");
 
-			  if (!currSymbol) {
-				  	sprintf(_errorMessage, "%s undefined", _currID);
-			        typeError(_errorMessage);
-			  } else {
-				  if (currSymbol->functionType == NON_FUNCTION) {
-					  sprintf(_errorMessage, "%s is not a function", _currID);
-			          typeError(_errorMessage);
-				  } else {
-					  if (currSymbol->type != VOID_TYPE) {
-						  sprintf(_errorMessage, "function %s must return VOID to be used as a statement",
-							  _currID);
-					      typeError(_errorMessage);
-					  }
-					  pushFunctionCall(currSymbol);
-				  }
-			  }
-			}
-			  args multiExprOpt ')' ';'
-			{
-			  if (_callStack) {
-			  	  if (_callStack->currParam) {
-				  	  sprintf(_errorMessage, "more arguments expected for function %s",
-					  	  _callStack->identifier);
-				  	  typeError(_errorMessage);
-			  	  }
-				
-				  SyntaxTree *tree = $5;
+              $$ = createTree(IF_TREE, NULL, $3.tree, $5);
+            }
+            | IF '(' expr ')' statement ELSE statement
+            {
+              if ($3.type != BOOLEAN)
+                  typeError("conditional in if statement must be a boolean");
 
-				  if (tree) {
-					  while (tree->left)
-						  tree = tree->left;
+                $$ = createTree(IF_TREE, NULL, $3.tree, $5);
+                $$->opt = $7;
+            }
+            | WHILE '(' expr ')' statement
+            {
+              if ($3.type != BOOLEAN)
+                  typeError("conditional in while loop must be a boolean");
 
-				  	  tree->left = $4;
-				      $$ = createTree(FUNCTION_CALL, recallGlobal(_callStack->identifier), $5, NULL);
-				  } else {
-					  $$ = createTree(FUNCTION_CALL, recallGlobal(_callStack->identifier), $4, NULL);
-				  }
+              $$ = createTree(WHILE_TREE, NULL, $3.tree, $5);
+            }
+            | FOR '(' assgOpt ';' exprOpt ';' assgOpt ')' statement
+            {
+              if ($5.type != BOOLEAN)
+                  typeError("conditional in for loop must be a boolean");
 
-		      	  popFunctionCall();
-		      }
-			}
-			| '{' statementOpt '}' { $$ = $2; }
-			| ';' { $$ = NULL; }
+            SyntaxTree *tree = createTree(WHILE_TREE, NULL, $5.tree, $9);
+            tree->opt = $7;
+            $$ = createTree(STATEMENT, NULL, tree, $3);
+            }
+            | RETURN expr ';'
+            {
+              Symbol *currSymbol = recallGlobal(_currFID);
 
-			/* error productions */
-			| error ';' { yyerrok; }
-			;
+              if (!currSymbol) {
+                  typeError("unexpected return statement");
+                  $$ = NULL;
+              } else {
+                  if (currSymbol->type != $2.type) {
+                      if (((currSymbol->type != INT_TYPE && currSymbol->type != CHAR_TYPE && currSymbol->type != FLOAT_TYPE)
+                        || ($2.type != INT_TYPE && $2.type != CHAR_TYPE && $2.type != FLOAT_TYPE))) {
+                              sprintf(_errorMessage, "return type for function %s does not match declared type", _currFID);
+                          typeError(_errorMessage);
+                      } else {
+                        _returnedValue = TRUE;
+                      }
+                    } else {
+                      _returnedValue = TRUE;
+                  }
+
+                  $$ = createTree(RETURN_TREE, currSymbol, $2.tree, NULL);
+              }
+            }
+            | RETURN ';'
+            {
+              Symbol *currSymbol = recallGlobal(_currFID);
+
+              if (!currSymbol) {
+                  typeError("unexpected return statement");
+                  $$ = NULL;
+              } else {
+                  if (currSymbol->type != VOID_TYPE) {
+                      sprintf(_errorMessage, "return type for function %s does not match declared type",
+                          _currFID);
+                      typeError(_errorMessage);
+                  }
+
+                  $$ = createTree(RETURN_TREE, currSymbol, NULL, NULL);
+              }
+
+
+            }
+            | assignment ';' { $$ = $1; }
+            | storeID '('')' ';'
+            {
+              Symbol *currSymbol = recallGlobal(_currID);
+
+              if (currSymbol) {
+                  if (!currSymbol->parameterListHead) {
+                      sprintf(_errorMessage, "%s is not a function", _currID);
+                      typeError(_errorMessage);
+                  }
+
+                  else if (currSymbol->parameterListHead->type != VOID_TYPE) {
+                      sprintf(_errorMessage, "function %s takes non-VOID arguments",
+                          _currID);
+                         typeError(_errorMessage);
+                  }
+
+                  if (currSymbol->type != VOID_TYPE) {
+                      sprintf(_errorMessage, "function %s must return VOID to be used as a statement",
+                          _currID);
+                      typeError(_errorMessage);
+                  }
+
+                  $$ = createTree(FUNCTION_CALL, currSymbol, NULL, NULL);
+              } else {
+                  sprintf(_errorMessage, "%s undefined", _currID);
+                  typeError(_errorMessage);
+                  $$ = NULL;
+              }
+
+            }
+            | storeID '('
+            {
+              Symbol *currSymbol = recallGlobal(_currID);
+
+              if (!currSymbol) {
+                      sprintf(_errorMessage, "%s undefined", _currID);
+                    typeError(_errorMessage);
+              } else {
+                  if (currSymbol->functionType == NON_FUNCTION) {
+                      sprintf(_errorMessage, "%s is not a function", _currID);
+                      typeError(_errorMessage);
+                  } else {
+                      if (currSymbol->type != VOID_TYPE) {
+                          sprintf(_errorMessage, "function %s must return VOID to be used as a statement",
+                              _currID);
+                          typeError(_errorMessage);
+                      }
+                      pushFunctionCall(currSymbol);
+                  }
+              }
+            }
+              args multiExprOpt ')' ';'
+            {
+              if (_callStack) {
+                    if (_callStack->currParam) {
+                        sprintf(_errorMessage, "more arguments expected for function %s",
+                            _callStack->identifier);
+                        typeError(_errorMessage);
+                    }
+
+                  SyntaxTree *tree = $5;
+
+                  if (tree) {
+                      while (tree->left)
+                          tree = tree->left;
+
+                        tree->left = $4;
+                      $$ = createTree(FUNCTION_CALL, recallGlobal(_callStack->identifier), $5, NULL);
+                  } else {
+                      $$ = createTree(FUNCTION_CALL, recallGlobal(_callStack->identifier), $4, NULL);
+                  }
+
+                    popFunctionCall();
+              }
+            }
+            | '{' statementOpt '}' { $$ = $2; }
+            | ';' { $$ = NULL; }
+
+            /* error productions */
+            | error ';' { yyerrok; }
+            ;
 
 statementOpt: statementOpt statement
-			{
-			  if ($2) {
-			  	  $$ = createTree(STATEMENT, NULL, $2, $1);
-			  }
-			}
-			| /* empty */ { $$ = NULL; }
-			;
+            {
+              if ($2) {
+                    $$ = createTree(STATEMENT, NULL, $2, $1);
+              }
+            }
+            | /* empty */ { $$ = NULL; }
+            ;
 
 exprOpt:	  expr { $$.type = $1.type; $$.tree = $1.tree; }
-			| /* empty */ { $$.type = BOOLEAN; $$.tree = NULL; }
-			;
+            | /* empty */ { $$.type = BOOLEAN; $$.tree = NULL; }
+            ;
 
 assignment:	  storeID '=' expr
-			{
-				_currID = $1;
-				Symbol *currSymbol = recall(_currID);
+            {
+              _currID = $1;
+              Symbol *currSymbol = recall(_currID);
 
-				if (!currSymbol) {
-					sprintf(_errorMessage, "%s undefined", _currID);
-					typeError(_errorMessage);
-				} else {
-					if ((currSymbol->type != INT_TYPE && currSymbol->type != CHAR_TYPE && currSymbol->type != FLOAT_TYPE)
-								|| currSymbol->functionType != NON_FUNCTION) {
-							sprintf(_errorMessage, "%s has incompatible type for assignment",
-								_currID);
-							typeError(_errorMessage);
-						}
-					if (currSymbol->type != $3.type) {
-						if ((currSymbol->type != INT_TYPE && currSymbol->type != CHAR_TYPE && currSymbol->type != FLOAT_TYPE)
-							&& ($3.type != INT_TYPE && $3.type != CHAR_TYPE && $3.type != FLOAT_TYPE)) {
-							sprintf(_errorMessage, "incompatible types for assignment of %s",
-								_currID);
-							typeError(_errorMessage);
-						}
-					}
-				}
-			
-			  SyntaxTree *leftHandSide = createTree(SYMBOL, currSymbol, NULL, NULL);
-			  $$ = createTree(ASSIGNMENT, NULL, leftHandSide, $3.tree);
-			}
-			| storeID '[' expr ']' '=' expr
-			{
-			  _currID = $1;
-			  Symbol *currSymbol = recall(_currID);
-			
-			  if (!currSymbol) {
-				  sprintf(_errorMessage, "%s undefined", _currID);
-				  typeError(_errorMessage);
-		  	  } else {
-					if (currSymbol->type != INT_ARRAY && currSymbol->type != CHAR_ARRAY) {
-						sprintf(_errorMessage, "%s must be an ARRAY to be indexed", _currID);
-						typeError(_errorMessage);
-					}
-				  
-				  	if (($3.type != INT_TYPE && $3.type != CHAR_TYPE && $3.type != FLOAT_TYPE)) {
-						sprintf(_errorMessage, "ARRAY index for %s must be INT, CHAR or FLOAT",
-							_currID);
-						typeError(_errorMessage);
-					}
+              if (!currSymbol) {
+                  sprintf(_errorMessage, "%s undefined", _currID);
+                  typeError(_errorMessage);
+                } else {
+                  if ((currSymbol->type != INT_TYPE && currSymbol->type != CHAR_TYPE && currSymbol->type != FLOAT_TYPE)
+                        || currSymbol->functionType != NON_FUNCTION) {
+                    sprintf(_errorMessage, "%s has incompatible type for assignment",
+                        _currID);
+                    typeError(_errorMessage);
+                }
+                  if (currSymbol->type != $3.type) {
+                      if ((currSymbol->type != INT_TYPE && currSymbol->type != CHAR_TYPE && currSymbol->type != FLOAT_TYPE)
+                          && ($3.type != INT_TYPE && $3.type != CHAR_TYPE && $3.type != FLOAT_TYPE)) {
+                        sprintf(_errorMessage, "incompatible types for assignment of %s",
+                            _currID);
+                        typeError(_errorMessage);
+                      }
+                  }
+              }
 
-					if (($6.type != INT_TYPE && $6.type != CHAR_TYPE && $6.type != FLOAT_TYPE))  {
-						sprintf(_errorMessage, "incompatible types for assignment of %s",
-							_currID);
-						typeError(_errorMessage);
-					}
-				
-				SyntaxTree *symbolTree = createTree(SYMBOL, currSymbol, NULL, NULL);
-				generateNewTempID();
-				Symbol *newSymbol = insert(_tempID, currSymbol->type);
-				SyntaxTree *array = createTree(ARRAY, newSymbol, symbolTree, $3.tree);
-				$$ = createTree(ASSIGNMENT, NULL, array, $6.tree);
-			  }
-			}
-			;
+              SyntaxTree *leftHandSide = createTree(SYMBOL, currSymbol, NULL, NULL);
+              $$ = createTree(ASSIGNMENT, NULL, leftHandSide, $3.tree);
+            }
+            | storeID '[' expr ']' '=' expr
+            {
+              _currID = $1;
+              Symbol *currSymbol = recall(_currID);
+
+              if (!currSymbol) {
+                  sprintf(_errorMessage, "%s undefined", _currID);
+                  typeError(_errorMessage);
+                } else {
+                  if (currSymbol->type != (INT_ARRAY && currSymbol->type != CHAR_ARRAY)) {
+                      sprintf(_errorMessage, "%s must be an ARRAY to be indexed", _currID);
+                      typeError(_errorMessage);
+                  }
+
+                  if (($3.type != INT_TYPE && $3.type != CHAR_TYPE && $3.type != FLOAT_TYPE)) {
+                      sprintf(_errorMessage, "ARRAY index for %s must be INT, CHAR or FLOAT",
+                          _currID);
+                      typeError(_errorMessage);
+                  }
+
+                  if (($6.type != INT_TYPE && $6.type != CHAR_TYPE && $6.type != FLOAT_TYPE))  {
+                        sprintf(_errorMessage, "incompatible types for assignment of %s",
+                            _currID);
+                        typeError(_errorMessage);
+                  }
+
+                SyntaxTree *symbolTree = createTree(SYMBOL, currSymbol, NULL, NULL);
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, currSymbol->type);
+                SyntaxTree *array = createTree(ARRAY, newSymbol, symbolTree, $3.tree);
+                $$ = createTree(ASSIGNMENT, NULL, array, $6.tree);
+              }
+            }
+            ;
 
 assgOpt:	  assignment { $$ = $1; }
-			| /* empty */ { $$ = NULL; }
-			;
+            | /* empty */ { $$ = NULL; }
+            ;
 
-expr:		  '-' expr %prec UMINUS
-			{
-				if (($2.type != INT_TYPE && $2.type != FLOAT_TYPE)){
-						$$.type = INT_TYPE;
-						typeError("incompatible expression for operator '-'");
+expr:		'-' expr %prec UMINUS
+            {
+                if (($2.type != INT_TYPE && $2.type != FLOAT_TYPE)){
+                    $$.type = INT_TYPE;
+                    typeError("incompatible expression for operator '-'");
                 }
 
-			
-				$$.type = $2.type;
-				
-				generateNewTempID();
-				Symbol *newSymbol = insert(_tempID, INT_TYPE);
-				$$.tree = createTree(NEG, newSymbol, $2.tree, NULL);
-			}
-			| '!' expr
-			{
-			  if ($2.type != BOOLEAN)
-				  typeError("incompatible expression for operator '!'");
-			
-			  $$.type = $2.type;
-			
-			  generateNewTempID();
-			  Symbol *newSymbol = insert(_tempID, BOOLEAN);
-			  $$.tree = createTree(NOT, newSymbol, $2.tree, NULL);
-			}
-			| expr '+' expr
-			{
-			  if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE))){
+                $$.type = $2.type;
+
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, INT_TYPE);
+                $$.tree = createTree(NEG, newSymbol, $2.tree, NULL);
+            }
+            | '!' expr
+            {
+                if ($2.type != BOOLEAN){
+                    $$.type = INT_TYPE;
+                    typeError("incompatible expression for operator '!'");
+                }
+
+                $$.type = $2.type;
+
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(NOT, newSymbol, $2.tree, NULL);
+            }
+            | expr '+' expr
+            {
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE))){
                     $$.type = VOID;
                     typeError("incompatible expression for operator '+'");
                 } else {
@@ -925,17 +785,15 @@ expr:		  '-' expr %prec UMINUS
                         $$.type = $3.type;
                     else
                         $$.type = $1.type;
+
+                    generateNewTempID();
+                    Symbol *newSymbol = insert(_tempID, INT_TYPE);
+                    $$.tree = createTree(ADD, newSymbol, $3.tree, $1.tree);
                 }
-			
-			  $$.type = $1.type;
-			
-			  generateNewTempID();
-			  Symbol *newSymbol = insert(_tempID, INT_TYPE);
-			  $$.tree = createTree(ADD, newSymbol, $3.tree, $1.tree);
-			}
-			| expr '-' expr
-			{
-				if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE))){
+            }
+            | expr '-' expr
+            {
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE))){
                     $$.type = INT_TYPE;
                     typeError("incompatible expression for operator '-'");
                 }
@@ -946,16 +804,14 @@ expr:		  '-' expr %prec UMINUS
                     $$.type = $3.type;
                 else
                     $$.type = $1.type;
-			
-			  $$.type = $1.type;
-			
-			  generateNewTempID();
-			  Symbol *newSymbol = insert(_tempID, INT_TYPE);
-			  $$.tree = createTree(SUB, newSymbol, $3.tree, $1.tree);
-			}
-			| expr '*' expr
-			{
-				if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+
+              generateNewTempID();
+              Symbol *newSymbol = insert(_tempID, INT_TYPE);
+              $$.tree = createTree(SUB, newSymbol, $3.tree, $1.tree);
+            }
+            | expr '*' expr
+            {
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
                     typeError("incompatible expression for operator '*'");
 
                 if ($1.type == FLOAT_TYPE)
@@ -964,16 +820,14 @@ expr:		  '-' expr %prec UMINUS
                     $$.type = $3.type;
                 else
                     $$.type = $1.type;
-			
-			  $$.type = $1.type;
-			
-			  generateNewTempID();
-			  Symbol *newSymbol = insert(_tempID, INT_TYPE);
-			  $$.tree = createTree(MULT, newSymbol, $3.tree, $1.tree);
-			}
-			| expr '/' expr
-			{
-				if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, INT_TYPE);
+                $$.tree = createTree(MULT, newSymbol, $3.tree, $1.tree);
+            }
+            | expr '/' expr
+            {
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
                     typeError("incompatible expression for operator '/'");
                 
                 // else if ((($3.type == FLOAT_TYPE || $3.type == INT_TYPE) && 1))
@@ -985,134 +839,126 @@ expr:		  '-' expr %prec UMINUS
                     $$.type = $3.type;
                 else
                     $$.type = $1.type;
-			
-				$$.type = $1.type;
-			
-				generateNewTempID();
-				Symbol *newSymbol = insert(_tempID, INT_TYPE);
-				$$.tree = createTree(DIV, newSymbol, $3.tree, $1.tree);
-			}
-			| expr DBLEQ expr
-			{
-			  if (($1.type != INT_TYPE && $1.type != CHAR_TYPE) 
-					|| ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
-				  typeError("incompatible expression for operator '=='");
-			
-			  $$.type = BOOLEAN;
-			
-			  generateNewTempID();
-			  Symbol *newSymbol = insert(_tempID, BOOLEAN);
-			  $$.tree = createTree(EQUAL, newSymbol, $3.tree, $1.tree);
-			}
-			| expr NOTEQ expr
-			{
-			  if (($1.type != INT_TYPE && $1.type != CHAR_TYPE) 
-					|| ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
-				  typeError("incompatible expression for operator '!='");
-			
-			  $$.type = BOOLEAN;
-			
-			  generateNewTempID();
-			  Symbol *newSymbol = insert(_tempID, BOOLEAN);
-			  $$.tree = createTree(NOT_EQUAL, newSymbol, $3.tree, $1.tree);
-			}
-			| expr LTEQ expr
-			{
-			  if (($1.type != INT_TYPE && $1.type != CHAR_TYPE) 
-					|| ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
-				  typeError("incompatible expression for operator '<='");
-			
-			  $$.type = BOOLEAN;
-			
-			  generateNewTempID();
-			  Symbol *newSymbol = insert(_tempID, BOOLEAN);
-			  $$.tree = createTree(LESS_EQUAL, newSymbol, $3.tree, $1.tree);
-			}
-			| expr '<' expr
-			{
-			  if (($1.type != INT_TYPE && $1.type != CHAR_TYPE) 
-					|| ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
-				  typeError("incompatible expression for operator '<'");
-			
-			  $$.type = BOOLEAN;
-			
-			  generateNewTempID();
-			  Symbol *newSymbol = insert(_tempID, BOOLEAN);
-			  $$.tree = createTree(LESS_THAN, newSymbol, $3.tree, $1.tree);
-			}
-			| expr GTEQ expr
-			{
-			  if (($1.type != INT_TYPE && $1.type != CHAR_TYPE) 
-					|| ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
-				  typeError("incompatible expression for operator '>='");
-			
-			  $$.type = BOOLEAN;
-			
-			  generateNewTempID();
-			  Symbol *newSymbol = insert(_tempID, BOOLEAN);
-			  $$.tree = createTree(GREATER_EQUAL, newSymbol, $3.tree, $1.tree);
-			}
-			| expr '>' expr
-			{
-			  if (($1.type != INT_TYPE && $1.type != CHAR_TYPE) 
-					|| ($3.type != INT_TYPE && $3.type != CHAR_TYPE))
-				  typeError("incompatible expression for operator '>'");
-			
-			  $$.type = BOOLEAN;
-			
-			  generateNewTempID();
-			  Symbol *newSymbol = insert(_tempID, BOOLEAN);
-			  $$.tree = createTree(GREATER_THAN, newSymbol, $3.tree, $1.tree);
-			}
-			| expr LOGICAND expr
-			{
-			  if ($1.type != BOOLEAN || $3.type != BOOLEAN)
-				  typeError("incompatible expression for operator '&&'");
-			
-			  $$.type = BOOLEAN;
-			
-			  generateNewTempID();
-			  Symbol *newSymbol = insert(_tempID, BOOLEAN);
-			  $$.tree = createTree(AND, newSymbol, $3.tree, $1.tree);
-			}
-			| expr LOGICOR expr
-			{
-			  if ($1.type != BOOLEAN || $3.type != BOOLEAN)
-				  typeError("incompatible expression for operator '||'");
-			
-			  $$.type = BOOLEAN;
-			
-			  generateNewTempID();
-			  Symbol *newSymbol = insert(_tempID, BOOLEAN);
-			  $$.tree = createTree(OR, newSymbol, $3.tree, $1.tree);
-			}
-			| ID
-			{
-			  _currID = $1;
-			  Symbol *currSymbol = recall(_currID);
-			  
-			  if (!currSymbol) {
-				  sprintf(_errorMessage, "%s undefined", _currID);
-				  typeError(_errorMessage);
-			  }
-				
-			}
-			multiFuncOpt
-			{
-				$$.type = $3.type;
-				$$.tree = $3.tree;
-			}
-			| '(' expr ')'	{ $$.type = $2.type; $$.tree = $2.tree; }
-			| INTCON
-			{
-			  $$.type = INT_TYPE;
-			  generateNewTempID();
-			  Symbol *newSymbol = insert(_tempID, INT_TYPE);
-			  newSymbol->value.intVal = $1;
-			  newSymbol->functionType = NON_FUNCTION;
-			  $$.tree = createTree(LITERAL, newSymbol, NULL, NULL);
-			}
-			| FLOATCON
+
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, INT_TYPE);
+                $$.tree = createTree(DIV, newSymbol, $3.tree, $1.tree);
+            }
+            | expr DBLEQ expr
+            {
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                    typeError("incompatible expression for operator '=='");
+
+                $$.type = BOOLEAN;
+
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(EQUAL, newSymbol, $3.tree, $1.tree);
+            }
+            | expr NOTEQ expr
+            {
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                    typeError("incompatible expression for operator '!='");
+
+                $$.type = BOOLEAN;
+
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(NOT_EQUAL, newSymbol, $3.tree, $1.tree);
+            }
+            | expr LTEQ expr
+            {
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                    typeError("incompatible expression for operator '<='");
+
+                $$.type = BOOLEAN;
+
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(LESS_EQUAL, newSymbol, $3.tree, $1.tree);
+            }
+            | expr '<' expr
+            {
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                    typeError("incompatible expression for operator '<'");
+
+                $$.type = BOOLEAN;
+
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(LESS_THAN, newSymbol, $3.tree, $1.tree);
+            }
+            | expr GTEQ expr
+            {
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                    typeError("incompatible expression for operator '>='");
+
+                $$.type = BOOLEAN;
+
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(GREATER_EQUAL, newSymbol, $3.tree, $1.tree);
+            }
+            | expr '>' expr
+            {
+                if (($1.type != $3.type && ($1.type == CHAR_TYPE || $3.type == CHAR_TYPE)))
+                    typeError("incompatible expression for operator '>'");
+
+                $$.type = BOOLEAN;
+
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(GREATER_THAN, newSymbol, $3.tree, $1.tree);
+            }
+            | expr LOGICAND expr
+            {
+                if ($1.type != BOOLEAN || $3.type != BOOLEAN)
+                    typeError("incompatible expression for operator '&&'");
+
+                $$.type = BOOLEAN;
+
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(AND, newSymbol, $3.tree, $1.tree);
+            }
+            | expr LOGICOR expr
+            {
+                if ($1.type != BOOLEAN || $3.type != BOOLEAN)
+                    typeError("incompatible expression for operator '||'");
+
+                $$.type = BOOLEAN;
+
+                generateNewTempID();
+                Symbol *newSymbol = insert(_tempID, BOOLEAN);
+                $$.tree = createTree(OR, newSymbol, $3.tree, $1.tree);
+            }
+            | ID
+            {
+              _currID = $1;
+              Symbol *currSymbol = recall(_currID);
+
+              if (!currSymbol) {
+                  sprintf(_errorMessage, "%s undefined", _currID);
+                  typeError(_errorMessage);
+              }
+
+            }
+            multiFuncOpt
+            {
+                $$.type = $3.type;
+                $$.tree = $3.tree;
+            }
+            | '(' expr ')'	{ $$.type = $2.type; $$.tree = $2.tree; }
+            | INTCON
+            {
+              $$.type = INT_TYPE;
+              generateNewTempID();
+              Symbol *newSymbol = insert(_tempID, INT_TYPE);
+              newSymbol->value.intVal = $1;
+              newSymbol->functionType = NON_FUNCTION;
+              $$.tree = createTree(LITERAL, newSymbol, NULL, NULL);
+            }
+            | FLOATCON
             {
               $$.type = FLOAT_TYPE;
               generateNewTempID();
@@ -1121,121 +967,121 @@ expr:		  '-' expr %prec UMINUS
               newSymbol->functionType = NON_FUNCTION;
               $$.tree = createTree(LITERAL, newSymbol, NULL, NULL);
             }
-			| CHARCON
-			{
-			  $$.type = CHAR_TYPE;
-			  generateNewTempID();
-			  Symbol *newSymbol = insert(_tempID, CHAR_TYPE);
-			  newSymbol->value.charVal = $1;
-			  newSymbol->functionType = NON_FUNCTION;
-			  $$.tree = createTree(LITERAL, newSymbol, NULL, NULL);
-			}
-			| STRCON
-			{
-			  $$.type = CHAR_ARRAY;
-			  
-			  Symbol *currSymbol = recallStringLiteral($1);
-			  
-			  if (!currSymbol) {
-			      generateNewTempID();
-				  currSymbol = insertGlobal(_tempID, CHAR_ARRAY);
-				  currSymbol->value.strVal = $1;
-				  currSymbol->functionType = NON_FUNCTION;
+            | CHARCON
+            {
+              $$.type = CHAR_TYPE;
+              generateNewTempID();
+              Symbol *newSymbol = insert(_tempID, CHAR_TYPE);
+              newSymbol->value.charVal = $1;
+              newSymbol->functionType = NON_FUNCTION;
+              $$.tree = createTree(LITERAL, newSymbol, NULL, NULL);
+            }
+            | STRCON
+            {
+              $$.type = CHAR_ARRAY;
 
-				  if (!(currSymbol->location = malloc(strlen(currSymbol->identifier) + 2)))
-					  ERROR(NULL, __LINE__, TRUE);				//out of memory
+              Symbol *currSymbol = recallStringLiteral($1);
+
+              if (!currSymbol) {
+                  generateNewTempID();
+                  currSymbol = insertGlobal(_tempID, CHAR_ARRAY);
+                  currSymbol->value.strVal = $1;
+                  currSymbol->functionType = NON_FUNCTION;
+
+                  if (!(currSymbol->location = malloc(strlen(currSymbol->identifier) + 2)))
+                      ERROR(NULL, __LINE__, TRUE);				//out of memory
 
 
-				  sprintf(currSymbol->location, "_%s", currSymbol->identifier);
-				  insertStringLiteral(currSymbol);
-			  }
-			  
-			  $$.tree = createTree(LITERAL, currSymbol, NULL, NULL);
-			}
-			;
-			
+                  sprintf(currSymbol->location, "_%s", currSymbol->identifier);
+                  insertStringLiteral(currSymbol);
+              }
+
+              $$.tree = createTree(LITERAL, currSymbol, NULL, NULL);
+            }
+            ;
+
 multiFuncOpt: '('')'
-			{
-			  Symbol *currSymbol = recallGlobal(_currID);
-			  
-			  if (currSymbol) {
-			      if (!currSymbol->parameterListHead) {
-					  sprintf(_errorMessage, "%s is not a function", _currID);
-				      typeError(_errorMessage);
-			      } else if (currSymbol->type == VOID_TYPE) {
-					  sprintf(_errorMessage, "void function %s in expression", _currID);
-					  typeError(_errorMessage);
-				  }	else if (currSymbol->parameterListHead->type != VOID_TYPE) {
-					  sprintf(_errorMessage, "function %s takes non-VOID arguments",
-						  _currID);
-			          typeError(_errorMessage);
-			      }
-				  $$.type = currSymbol->type;
-				  generateNewTempID();
-				  Symbol *newSymbol = insert(_tempID, currSymbol->type);
-				  SyntaxTree *tree = createTree(FUNCTION_CALL, currSymbol, NULL, NULL);
-				  $$.tree = createTree(RETRIEVE, newSymbol, tree, NULL);
-			  } else {
-				  $$.type = UNKNOWN;
-				  $$.tree = NULL;
-			  }
-			}
-			| '('
-			{
-			  Symbol *currSymbol = recallGlobal(_currID);
+            {
+              Symbol *currSymbol = recallGlobal(_currID);
 
-			  if (currSymbol) {
-			      if (currSymbol->functionType == NON_FUNCTION) {
-				      sprintf(_errorMessage, "%s is not a function", _currID);
-			          typeError(_errorMessage);
-				  } else if (currSymbol->type == VOID_TYPE) {
-				  	  sprintf(_errorMessage, "void function %s in expression", _currID);
-					  typeError(_errorMessage);
-				  }
-				  pushFunctionCall(currSymbol);
-			  }
-			}
-			  args multiExprOpt ')'
-			{ 
-			  if (_callStack) {
-			  	  if (_callStack->currParam) {
-				  	  sprintf(_errorMessage, "more arguments expected for function %s",
-					  	  _callStack->identifier);
-				  	  typeError(_errorMessage);
-			  	  }
-			  	  $$.type = (recallGlobal(_callStack->identifier))->type;
-				
-				  SyntaxTree *tree = $4;
+              if (currSymbol) {
+                  if (!currSymbol->parameterListHead) {
+                      sprintf(_errorMessage, "%s is not a function", _currID);
+                      typeError(_errorMessage);
+                  } else if (currSymbol->type == VOID_TYPE) {
+                      sprintf(_errorMessage, "void function %s in expression", _currID);
+                      typeError(_errorMessage);
+                  }	else if (currSymbol->parameterListHead->type != VOID_TYPE) {
+                      sprintf(_errorMessage, "function %s takes non-VOID arguments",
+                          _currID);
+                      typeError(_errorMessage);
+                  }
+                  $$.type = currSymbol->type;
+                  generateNewTempID();
+                  Symbol *newSymbol = insert(_tempID, currSymbol->type);
+                  SyntaxTree *tree = createTree(FUNCTION_CALL, currSymbol, NULL, NULL);
+                  $$.tree = createTree(RETRIEVE, newSymbol, tree, NULL);
+              } else {
+                  $$.type = UNKNOWN;
+                  $$.tree = NULL;
+              }
+            }
+            | '('
+            {
+              Symbol *currSymbol = recallGlobal(_currID);
 
-				  if (tree) {
-					  while (tree->left)
-						  tree = tree->left;
+              if (currSymbol) {
+                  if (currSymbol->functionType == NON_FUNCTION) {
+                      sprintf(_errorMessage, "%s is not a function", _currID);
+                      typeError(_errorMessage);
+                  } else if (currSymbol->type == VOID_TYPE) {
+                        sprintf(_errorMessage, "void function %s in expression", _currID);
+                      typeError(_errorMessage);
+                  }
+                  pushFunctionCall(currSymbol);
+              }
+            }
+              args multiExprOpt ')'
+            {
+              if (_callStack) {
+                    if (_callStack->currParam) {
+                        sprintf(_errorMessage, "more arguments expected for function %s",
+                            _callStack->identifier);
+                        typeError(_errorMessage);
+                    }
+                    $$.type = (recallGlobal(_callStack->identifier))->type;
 
-				  	  tree->left = $3;
-					  
-					  generateNewTempID();
-					  Symbol *newSymbol = insert(_tempID, $$.type);
-					  SyntaxTree *tree = createTree(FUNCTION_CALL, recallGlobal(_callStack->identifier), $4, NULL);
-					  $$.tree = createTree(RETRIEVE, newSymbol, tree, NULL);
-				  } else {
-					  generateNewTempID();
-					  Symbol *newSymbol = insert(_tempID, $$.type);
-					  SyntaxTree *tree = createTree(FUNCTION_CALL, recallGlobal(_callStack->identifier), $3, NULL);
-					  $$.tree = createTree(RETRIEVE, newSymbol, tree, NULL);
-				  }
-				
-			      popFunctionCall();
-			  } else {
-			      $$.type = UNKNOWN;
-				  $$.tree = NULL;
-			  }
-			  
-			}
-			| '['
-			{
-			  Symbol *currSymbol = recall(_currID);
+                  SyntaxTree *tree = $4;
 
-			  if (currSymbol) {
+                  if (tree) {
+                      while (tree->left)
+                          tree = tree->left;
+
+                        tree->left = $3;
+
+                      generateNewTempID();
+                      Symbol *newSymbol = insert(_tempID, $$.type);
+                      SyntaxTree *tree = createTree(FUNCTION_CALL, recallGlobal(_callStack->identifier), $4, NULL);
+                      $$.tree = createTree(RETRIEVE, newSymbol, tree, NULL);
+                  } else {
+                      generateNewTempID();
+                      Symbol *newSymbol = insert(_tempID, $$.type);
+                      SyntaxTree *tree = createTree(FUNCTION_CALL, recallGlobal(_callStack->identifier), $3, NULL);
+                      $$.tree = createTree(RETRIEVE, newSymbol, tree, NULL);
+                  }
+
+                  popFunctionCall();
+              } else {
+                  $$.type = UNKNOWN;
+                  $$.tree = NULL;
+              }
+
+            }
+            | '['
+            {
+              Symbol *currSymbol = recall(_currID);
+
+              if (currSymbol) {
                   if ((currSymbol->type != CHAR_ARRAY && currSymbol->type != INT_ARRAY && currSymbol->type != FLOAT_ARRAY)) {
                       sprintf(_errorMessage, "%s must be an ARRAY to be indexed",
                           _currID);
@@ -1244,42 +1090,18 @@ multiFuncOpt: '('')'
 
                   pushFunctionCall(currSymbol);
               }
-			}
-			  expr ']'
-			{
-//			  if ($3.type != INT_TYPE && $3.type != CHAR_TYPE) {
-//				  sprintf(_errorMessage, "array index for %s must be INT or CHAR",
-//					  _currID);
-//			  	  typeError(_errorMessage);
-//			  }
-			
-//			  if (!_callStack) {
-//				  $$.type = UNKNOWN;
-//				  $$.tree = NULL;
-//			  } else {
-//				  $$.type = (recall(_callStack->identifier))->type;
-				
-//				  generateNewTempID();
-//				  Symbol *newSymbol = insert(_tempID, $$.type);
-//				  SyntaxTree *tree = createTree(SYMBOL, recall(_callStack->identifier), NULL, NULL);
-//				  $$.tree = createTree(ARRAY, newSymbol, tree, $3.tree);
-				
-//				  if ($$.type == CHAR_ARRAY)
-//					  $$.type = CHAR_TYPE;
-//				  else
-//					  $$.type = INT_TYPE;
-				
-//				  popFunctionCall();
-//			  }
-				if (($3.type != INT_TYPE && $3.type != CHAR_TYPE && $3.type != FLOAT_TYPE)) {
+            }
+              expr ']'
+            {
+                if (($3.type != INT_TYPE && $3.type != CHAR_TYPE && $3.type != FLOAT_TYPE)) {
                     sprintf(_errorMessage, "array index for %s must be INT, CHAR or FLOAT", _currID);
                     typeError(_errorMessage);
-				}
+              }
 
-				if (!_callStack) {
-						$$.type = UNKNOWN;
-						$$.tree = NULL;
-				} else {
+              if (!_callStack) {
+                    $$.type = UNKNOWN;
+                    $$.tree = NULL;
+              } else {
                     $$.type = (recall(_callStack->identifier))->type;
 
                     generateNewTempID();
@@ -1295,59 +1117,57 @@ multiFuncOpt: '('')'
                         $$.type = FLOAT_TYPE;
 
                   popFunctionCall();
-				}
-			}
-			| /* empty */
-			{
-			  Symbol *currSymbol = recall(_currID);
-				
-			  if (currSymbol) {
-				  if (currSymbol->functionType != NON_FUNCTION) {
-					  sprintf(_errorMessage, "expected arguments for function %s",
-						  _currID);
-					  typeError(_errorMessage);
-				  }
-				  $$.type = currSymbol->type;
-				  $$.tree = createTree(SYMBOL, currSymbol, NULL, NULL);
-			  } else {
-				  $$.type = UNKNOWN;
-				  $$.tree = NULL;
-			  }
-			}
-			;
+              }
+            }
+            | /* empty */
+            {
+              Symbol *currSymbol = recall(_currID);
+
+              if (currSymbol) {
+                  if (currSymbol->functionType != NON_FUNCTION) {
+                      sprintf(_errorMessage, "expected arguments for function %s",
+                          _currID);
+                      typeError(_errorMessage);
+                  }
+                  $$.type = currSymbol->type;
+                  $$.tree = createTree(SYMBOL, currSymbol, NULL, NULL);
+              } else {
+                  $$.type = UNKNOWN;
+                  $$.tree = NULL;
+              }
+            }
+            ;
 
 args:		  expr
-			{
-			  if (_callStack) {
-		  	  	  if (!_callStack->currParam) {
-					  sprintf(_errorMessage, "extra arguments passed to function %s",
-						  _callStack->identifier);
-				      typeError(_errorMessage);
-					  $$ = NULL;
-				  } else if (_callStack->currParam->type != $1.type) {
-					  if ((_callStack->currParam->type != INT_TYPE
-					          && _callStack->currParam->type != CHAR_TYPE)
-						      || ($1.type != INT_TYPE && $1.type != CHAR_TYPE)) {
-			  	          typeError("type mismatch in arguments to function");
-						  $$ = NULL;
-					  } else {
-						  $$ = createTree(PARAMETER, NULL, NULL, $1.tree);
-					  }
-				  } else {
-					  $$ = createTree(PARAMETER, NULL, NULL, $1.tree);
-				  }
-			  } else {
-				  $$ = NULL;
-			  }
-		  	  
-		      if (_callStack->currParam)
-			      _callStack->currParam = _callStack->currParam->next;
-			}
-			;
+            {
+                if (_callStack) {
+                        if (!_callStack->currParam) {
+                        sprintf(_errorMessage, "extra arguments passed to function %s",
+                            _callStack->identifier);
+                        typeError(_errorMessage);
+                        $$ = NULL;
+                    } else if (_callStack->currParam->type != $1.type) {
+                        if (((_callStack->currParam->type != INT_TYPE && _callStack->currParam->type != CHAR_TYPE) || ($1.type != INT_TYPE && $1.type != CHAR_TYPE))) {
+                            typeError("type mismatch in arguments to function");
+                            $$ = createTree(PARAMETER, NULL, NULL, $1.tree);
+                        } else {
+                            $$ = createTree(PARAMETER, NULL, NULL, $1.tree);
+                        }
+                    } else {
+                        $$ = createTree(PARAMETER, NULL, NULL, $1.tree);
+                    }
+                } else {
+                    $$ = NULL;
+                }
+
+                if (_callStack->currParam)
+                    _callStack->currParam = _callStack->currParam->next;
+            }
+            ;
 
 multiExprOpt: multiExprOpt ',' args { $3->left = $1; $$ = $3; }
-			| /* empty */ { $$ = NULL; }
-			;
+            | /* empty */ { $$ = NULL; }
+            ;
 
 %%
 
@@ -1358,18 +1178,18 @@ multiExprOpt: multiExprOpt ',' args { $3->left = $1; $$ = $3; }
  * Preconditions: none
  */
 void insertTempVariable(Symbol *tempVariable) {
-    if (!tempVariable)
-        return;
-
-    TempVariable *newTemp = NULL;
-
-    if (!(newTemp = malloc(sizeof(TempVariable))))
-        ERROR(NULL, __LINE__, TRUE);					// out of memory
-
-    newTemp->symbol = tempVariable;
-
-    newTemp->next = _tempVariables;
-    _tempVariables = newTemp;
+	if (!tempVariable)
+		return;
+	
+	TempVariable *newTemp = NULL;
+	
+	if (!(newTemp = malloc(sizeof(TempVariable))))
+		ERROR(NULL, __LINE__, TRUE);					// out of memory
+		
+	newTemp->symbol = tempVariable;
+	
+	newTemp->next = _tempVariables;
+	_tempVariables = newTemp;
 }
 
 /* Function: popTempVariables
@@ -1382,14 +1202,11 @@ void insertTempVariable(Symbol *tempVariable) {
 void popTempVariables(TempVariable *tempVariable) {
 	if (!tempVariable)
 		return;
-	
-	printf("\n");
-	printf("_%s:\n", tempVariable->symbol->identifier);
 
 	if (tempVariable->symbol->type == CHAR_TYPE)
-		printf("\t.byte 0\n");
+		printf("\tchar %s\n", tempVariable->symbol->identifier);
 	else
-		printf("\t.word 0\n");
+		printf("\tint %s\n", tempVariable->symbol->identifier);
 	
 	
 	popTempVariables(tempVariable->next);
@@ -1463,14 +1280,13 @@ void popStringLiterals(StringLiteral *stringLiteral) {
 
 /* Function: yyerror
  * Parameters: char *errorMessage
- * Description: Called when syntax errors are found. Prints error message and
- *					turns code generation off.
+ * Description: Called when syntax errors are found. Prints error message and flags error.
  * Returns: void
  * Preconditions: none
  */
-void yyerror(const char* errorMessage) {
+void yyerror(char* errorMessage) {
 	fprintf(stderr, "SYNTAX ERROR: line %d: Near token (%s)\n", yylineno, yytext);
-	_generateCode = 0;
+	_generateCode = FALSE;
 }
 
 int yywrap() {
@@ -1497,22 +1313,19 @@ void declareGlobalVariables(SyntaxTree *tree) {
 
 	if (!(currSymbol->location = malloc(strlen(currSymbol->identifier) + 2)))
 		ERROR(NULL, __LINE__, TRUE);				//out of memory
-		
-	sprintf(currSymbol->location, "_%s", currSymbol->identifier);
-	printf("%s:\n", currSymbol->location);
 	
 	switch (currSymbol->type) {
 		case CHAR_TYPE:
-			printf("\t.byte 0\n");
+			printf("\tchar %s\n", currSymbol->identifier);
 			break;
 		case INT_TYPE:
-			printf("\t.word 0\n");
+			printf("\tint %s\n", currSymbol->identifier);
 			break;
 		case CHAR_ARRAY:
-			printf("\t.space %d\n", currSymbol->value.intVal);
+			printf("\tchar %s[%d]\n", currSymbol->identifier, currSymbol->value.intVal);
 			break;
 		case INT_ARRAY:
-			printf("\t.space %d\n", (4 * currSymbol->value.intVal));
+			printf("\tint %s[%d]\n", currSymbol->identifier, currSymbol->value.intVal);
 			break;
 		default:
 			break;
@@ -2326,616 +2139,6 @@ Code *constructCode(SyntaxTree *tree) {
 	return tree->code;
 }
 
-/* Function: writeCode
- * Parameters: Code *code
- * Description: Converts the given three address code list into mips assemblycode.
- * Returns: none
- * Preconditions: none
- */
-void writeCode(Code *code) {
-	if (!code || !_generateCode)
-		return;
-	
-	switch (code->opcode) {
-		case ADD_OP:
-			writeExpressionCode("add", "+", code);
-			break;
-		case SUB_OP:
-			writeExpressionCode("sub", "-", code);
-			break;
-		case MULT_OP:
-			writeExpressionCode("mul", "*", code);
-			break;
-		case DIV_OP:
-			writeExpressionCode("div", "/", code);
-			break;
-		case NEG_OP:
-			printf("\n");
-		
-			if (code->source1->location) {
-					
-				printf("\t# -%s\n", code->source1->identifier);
-					
-				if (code->source1->type == CHAR_TYPE) {
-					printf("\tlb\t\t$t0, %s\n", code->source1->location);
-				} else if (code->source1->reference) {
-					printf("\tlw\t\t$t0, %s\n", code->source1->location);
-				} else {
-					printf("\tlw\t\t$t0, %s\n", code->source1->location);
-				}
-				
-				if (code->source1->type == CHAR_ARRAY)
-					printf("\tlb\t\t$t0, 0($t0)\n");
-				if (code->source1->type == INT_ARRAY)
-					printf("\tlw\t\t$t0, 0($t0)\n");
-					
-			} else {
-					
-				if (code->source1->type == CHAR_TYPE) {
-					if (code->source1->value.charVal == '\n') {
-						printf("\t# -'\\n'\n");
-						printf("\tli\t\t$t0, 10		# 10 is ascii value for '\\n'\n");
-					} else if (code->source1->value.charVal == '\0') {
-						printf("\t# -'\\0'\n");
-						printf("\tli\t\t$t0, 0		# 0 is ascii value for '\\0'\n");
-					} else {
-						printf("\t# -'%c'\n", code->source1->value.charVal);
-						printf("\tli\t\t$t0, '%c'\n", code->source1->value.charVal);
-					}
-				} else {
-					printf("\t# -%d\n", code->source1->value.intVal);
-					printf("\tli\t\t$t0, %d\n", code->source1->value.intVal);
-				}
-				
-			}
-			
-			printf("\tneg\t\t$t0, $t0\n");
-		
-			if (code->destination->type == CHAR_TYPE)
-				printf("\tsb\t\t$t0, ");
-			else
-				printf("\tsw\t\t$t0, ");
-			
-			if (_offset != 0 && strncmp(code->destination->location, "_", 1) != 0)
-				printf("%d + %s\n", _offset, code->destination->location);
-			else
-				printf("%s\n", code->destination->location);
-			
-			break;
-		case NOT_OP:
-			printf("\n");
-			
-			printf("\tlw\t\t$t0, %s\n", code->source1->location);
-			printf("\txori\t$t0, $t0, 1\n");
-			printf("\tsw\t\t$t0, %s\n", code->destination->location);
-
-			break;
-		case EQUAL_OP:
-			writeExpressionCode("seq", "==", code);
-			break;
-		case NOT_EQUAL_OP:
-			writeExpressionCode("sne", "!=", code);
-			break;
-		case GREATER_THAN_OP:
-			writeExpressionCode("sgt", ">", code);
-			break;
-		case GREATER_EQUAL_OP:
-			writeExpressionCode("sge", ">=", code);
-			break;
-		case LESS_THAN_OP:
-			writeExpressionCode("slt", "<", code);
-			break;
-		case LESS_EQUAL_OP:
-			writeExpressionCode("sle", "<=", code);
-			break;
-		case AND_OP:
-			printf("\n");
-			
-			printf("\tlw\t\t$t0, %s\n", code->source1->location);
-			printf("\tlw\t\t$t1, %s\n", code->source2->location);
-			printf("\tand\t\t$t0, $t0, $t1\n");
-			printf("\tsw\t\t$t0, %s\n", code->destination->location);
-			
-			break;
-		case OR_OP:
-			printf("\n");
-			
-			printf("\tlw\t\t$t0, %s\n", code->source1->location);
-			printf("\tlw\t\t$t1, %s\n", code->source2->location);
-			printf("\tor\t\t$t0, $t0, $t1\n");
-			printf("\tsw\t\t$t0, %s\n", code->destination->location);
-			
-			break;
-		case RETRIEVE_OP:
-			printf("\n");
-			
-			printf("\t# retrieve return value from %s\n", code->source1->identifier);
-			
-			if (code->destination->type == CHAR_TYPE) {
-				printf("\tsb\t\t$v0, ");
-			} else {
-				printf("\tsw\t\t$v0, ");
-			}
-			
-			if (_offset != 0 && strncmp(code->destination->location, "_", 1) != 0)
-				printf("%d + %s\n", _offset, code->destination->location);
-			else
-				printf("%s\n", code->destination->location);
-			
-			break;
-		case BRANCH:
-			printf("\n");
-			printf("\tlw\t\t$t0, %s\n", code->source1->location);
-			printf("\tbgtz\t$t0, _%s\n", code->destination->identifier);
-			break;
-		case JUMP:
-			printf("\n");
-			printf("\tj\t\t_%s\n", code->source1->identifier);
-			break;
-		case LABEL:
-			printf("\n");
-			printf("_%s:\n", code->source1->identifier);
-			break;
-		case RETURN_OP:
-			printf("\n");
-			if (!code->source1) {
-				printf("\t# return\n");
-				printf("\tj\t\t__%sReturn\n", code->destination->identifier);
-			} else {
-				
-				if (code->source1->location) {
-
-					printf("\t# return %s\n", code->source1->identifier);
-
-					if (code->source1->type == CHAR_ARRAY) {
-						printf("\tlw\t\t$t0, %s\n", code->source1->location);
-						printf("\tlb\t\t$t0, 0($t0)\n");
-					} else if (code->source1->type == INT_ARRAY) {
-						printf("\tlw\t\t$t0, %s\n", code->source1->location);
-						printf("\tlw\t\t$t0, 0($t0)\n");
-					} else if (code->source1->type == CHAR_TYPE) {
-						printf("\tlb\t\t$t0, %s\n", code->source1->location);
-					} else {
-						printf("\tlw\t\t$t0, %s\n", code->source1->location);
-					}
-
-				} else {
-
-					if (code->source1->type == CHAR_TYPE) {
-						if (code->source1->value.charVal == '\n') {
-							printf("\t# return '\\n'\n");
-							printf("\tli\t\t$t0, 10		# 10 is ascii value for '\\n'\n");
-						} else if (code->source1->value.charVal == '\0') {
-							printf("\t# return '\\0'\n");
-							printf("\tli\t\t$t0, 0		# 0 is ascii value for '\\0'\n");
-						} else {
-							printf("\t# return '%c'\n", code->source1->value.charVal);
-							printf("\tli\t\t$t0, '%c'\n", code->source1->value.charVal);
-						}
-					} else {
-						printf("\t# return %d\n", code->source1->value.intVal);
-						printf("\tli\t\t$t0, %d\n", code->source1->value.intVal);
-					}
-
-				}
-				
-				printf("\tadd\t\t$v0, $t0, $0\n");
-				printf("\tj\t\t__%sReturn\n", code->destination->identifier);
-			}
-			break;
-		case ARRAY_OP:
-			printf("\n");
-				
-			if (code->source2->location) {
-				
-				printf("\t# %s[%s]\n", code->source1->identifier, code->source2->identifier);
-				
-				if (code->source2->type == CHAR_ARRAY) {
-					printf("\tlw\t\t$t1, %s\n", code->source2->location);
-					printf("\tlb\t\t$t1, 0($t1)\n");
-				} else if (code->source2->type == INT_ARRAY) {
-					printf("\tlw\t\t$t1, %s\n", code->source2->location);
-					printf("\tlw\t\t$t1, 0($t1)\n");
-				} else if (code->source2->type == CHAR_TYPE) {
-					printf("\tlb\t\t$t1, %s\n", code->source2->location);
-				} else {
-					printf("\tlw\t\t$t1, %s\n", code->source2->location);
-				}
-					
-			} else {
-					
-				if (code->source2->type == CHAR_TYPE) {
-					if (code->source2->value.charVal == '\n') {
-						printf("\t# %s['\\n']\n", code->source1->identifier);
-						printf("\tli\t\t$t1, 10		# 10 is ascii value for '\\n'\n");
-					} else if (code->source2->value.charVal == '\0') {
-						printf("\t# %s[\\0']\n", code->source1->identifier);
-						printf("\tli\t\t$t1, 0		# 0 is ascii value for '\\0'\n");
-					} else {
-						printf("\t# %s['%c']\n", code->source1->identifier, code->source2->value.charVal);
-						printf("\tli\t\t$t1, '%c'\n", code->source2->value.charVal);
-					}
-				} else {
-					printf("\t# %s[%d]\n", code->source1->identifier, code->source2->value.intVal);
-					printf("\tli\t\t$t1, %d\n", code->source2->value.intVal);
-				}
-				
-			}
-			
-			if (code->destination->type == INT_ARRAY)
-				printf("\tsll\t\t$t1, $t1, 2\t\t# index * 4 (size of int)\n");
-			
-			if (code->source1->reference) {
-				printf("\tlw\t\t$t0, %s\n", code->source1->location);
-				code->destination->reference = TRUE;
-			} else {
-				printf("\tla\t\t$t0, %s\n", code->source1->location);
-			}
-				
-			printf("\tadd\t\t$t0, $t0, $t1\n");
-			printf("\tsw\t\t$t0, ");
-			
-			if (_offset != 0 && strncmp(code->destination->location, "_", 1) != 0)
-				printf("%d + %s\n", _offset, code->destination->location);
-			else
-				printf("%s\n", code->destination->location);
-			
-			break;
-		case ASSIGNMENT_OP:
-			printf("\n");
-			
-			if (code->source1->location) {
-				
-				printf("\t# %s = %s\n", code->destination->identifier, code->source1->identifier);
-
-				if (code->source1->type == CHAR_ARRAY) {
-					printf("\tlw\t\t$t0, %s\n", code->source1->location);
-					printf("\tlb\t\t$t0, 0($t0)\n");
-				} else if (code->source1->type == INT_ARRAY) {
-					printf("\tlw\t\t$t0, %s\n", code->source1->location);
-					printf("\tlw\t\t$t0, 0($t0)\n");
-				} else if (code->source1->type == CHAR_TYPE) {
-					printf("\tlb\t\t$t0, %s\n", code->source1->location);
-				} else {
-					printf("\tlw\t\t$t0, %s\n", code->source1->location);
-				}
-					
-			} else {
-				
-				if (code->source1->type == CHAR_TYPE) {
-					if (code->source1->value.charVal == '\n') {
-						printf("\t# %s = '\\n'\n", code->destination->identifier);
-						printf("\tli\t\t$t0, 10		# 10 is ascii value for '\\n'\n");
-					} else if (code->source1->value.charVal == '\0') {
-						printf("\t# %s = '\\0'\n", code->destination->identifier);
-						printf("\tli\t\t$t0, 0		# 0 is ascii value for '\\0'\n");
-					} else {
-						printf("\t# %s = '%c'\n", code->destination->identifier, code->source1->value.charVal);
-						printf("\tli\t\t$t0, '%c'\n", code->source1->value.charVal);
-					}
-				} else {
-					printf("\t# %s = %d\n", code->destination->identifier, code->source1->value.intVal);
-					printf("\tli\t\t$t0, %d\n", code->source1->value.intVal);
-				}
-				
-			}
-			
-			if (code->destination->type == CHAR_ARRAY)
-				printf("\tlw\t\t$t1, ");
-			else if (code->destination->type == INT_ARRAY)
-				printf("\tlw\t\t$t1, ");
-			else if (code->destination->type == CHAR_TYPE)
-				printf("\tsb\t\t$t0, ");
-			else
-				printf("\tsw\t\t$t0, ");
-			
-			if (_offset != 0 && strncmp(code->destination->location, "_", 1) != 0)
-				printf("%d + %s\n", _offset, code->destination->location);
-			else
-				printf("%s\n", code->destination->location);
-				
-			if (code->destination->type == CHAR_ARRAY)
-				printf("\tsb\t\t$t0, 0($t1)\n");	
-				
-			if (code->destination->type == INT_ARRAY)
-				printf("\tsw\t\t$t0, 0($t1)\n");
-				
-			break;
-		case ENTER:
-			printf("\n");
-			printf("\t# calling %s\n", code->source1->identifier);
-			
-			if (strcmp(code->source1->identifier, "main") == 0)
-				printf("\tjal\t\tmain\n %s", code->source1->identifier);
-			else
-				printf("\tjal\t\t_%s\n", code->source1->identifier);
-			
-			Parameter *currParam = code->source1->parameterListHead;
-			int bytesToPop = 0;
-
-			if (currParam && currParam->type != VOID_TYPE) {
-				printf("\n\t# popping pushed parameters\n");
-				
-				while (currParam) {
-					bytesToPop += 4;
-					currParam = currParam->next;
-				}
-				
-				printf("\taddu\t$sp, $sp, %d\n", bytesToPop);
-				_offset -= bytesToPop;
-			}
-			break;
-		case LEAVE:
-			break;
-		case PUSH_PARAM:
-			printf("\n");
-			
-			if (code->source1->location) {
-				
-				printf("\t# pushing parameter %s\n", code->source1->identifier);
-				if (code->source1->type == CHAR_ARRAY) {
-					if (code->source1->reference) {
-						if (_offset != 0 && strncmp(code->source1->location, "_", 1) != 0)
-							printf("\tlw\t\t$t0, %d + %s\n", _offset, code->source1->location);
-						else
-							printf("\tlw\t\t$t0, %s\n", code->source1->location);
-						printf("\tsubu\t$sp, $sp, 4\n");
-						printf("\tsw\t\t$t0, 0($sp)\n");
-					} else if (strncmp(code->source1->identifier, "_temp", 5) == 0
-							&& !code->source1->value.strVal) {
-						// char array being indexed
-						if (_offset != 0 && strncmp(code->source1->location, "_", 1) != 0)
-							printf("\tlw\t\t$t0, %d + %s\n", _offset, code->source1->location);
-						else
-							printf("\tlw\t\t$t0, %s\n", code->source1->location);
-						printf("\tlb\t\t$t0, 0($t0)\n");
-						printf("\tsubu\t$sp, $sp, 4\n");
-						printf("\tsw\t\t$t0, 0($sp)\n");
-					} else {
-						// char array being passed whole
-						if (_offset != 0 && strncmp(code->source1->location, "_", 1) != 0)
-							printf("\tla\t\t$t0, %d + %s\n", _offset, code->source1->location);
-						else
-							printf("\tla\t\t$t0, %s\n", code->source1->location);
-						printf("\tsubu\t$sp, $sp, 4\n");
-						printf("\tsw\t\t$t0, 0($sp)\n");
-					}
-				} else if (code->source1->type == INT_ARRAY) {
-					if (code->source1->reference) {
-						if (_offset != 0 && strncmp(code->source1->location, "_", 1) != 0)
-							printf("\tlw\t\t$t0, %d + %s\n", _offset, code->source1->location);
-						else
-							printf("\tlw\t\t$t0, %s\n", code->source1->location);
-						printf("\tsubu\t$sp, $sp, 4\n");
-						printf("\tsw\t\t$t0, 0($sp)\n");
-					} else if (strncmp(code->source1->identifier, "_temp", 5) == 0) {
-						// int array being indexed
-						if (_offset != 0 && strncmp(code->source1->location, "_", 1) != 0)
-							printf("\tlw\t\t$t0, %d + %s\n", _offset, code->source1->location);
-						else
-							printf("\tlw\t\t$t0, %s\n", code->source1->location);
-						printf("\tlw\t\t$t0, 0($t0)\n");
-						printf("\tsubu\t$sp, $sp, 4\n");
-						printf("\tsw\t\t$t0, 0($sp)\n");
-					} else {
-						// int array being passed whole
-						if (_offset != 0 && strncmp(code->source1->location, "_", 1) != 0)
-							printf("\tla\t\t$t0, %d + %s\n", _offset, code->source1->location);
-						else
-							printf("\tla\t\t$t0, %s\n", code->source1->location);
-						printf("\tsubu\t$sp, $sp, 4\n");
-						printf("\tsw\t\t$t0, 0($sp)\n");
-					}
-				} else if (code->source1->type == CHAR_TYPE) {
-					if (_offset != 0 && strncmp(code->source1->location, "_", 1) != 0)
-						printf("\tlb\t\t$t0, %d + %s\n", _offset, code->source1->location);
-					else
-						printf("\tlb\t\t$t0, %s\n", code->source1->location);
-					printf("\tsubu\t$sp, $sp, 4\n");
-					printf("\tsw\t\t$t0, 0($sp)\n");
-				} else if (code->source1->type == INT_TYPE) {
-					if (_offset != 0 && strncmp(code->source1->location, "_", 1) != 0)
-						printf("\tlw\t\t$t0, %d + %s\n", _offset, code->source1->location);
-					else
-						printf("\tlw\t\t$t0, %s\n", code->source1->location);
-					printf("\tsubu\t$sp, $sp, 4\n");
-					printf("\tsw\t\t$t0, 0($sp)\n");
-				} else {
-					if (_offset != 0 && strncmp(code->source1->location, "_", 1) != 0)
-						printf("\tla\t\t$t0, %d + %s\n", _offset, code->source1->location);
-					else
-						printf("\tla\t\t$t0, %s\n", code->source1->location);
-					printf("\tsubu\t$sp, $sp, 4\n");
-					printf("\tsw\t\t$t0, 0($sp)\n");
-				}
-				
-			} else {
-				
-				if (code->source1->type == CHAR_TYPE) {
-					if (code->source1->value.charVal == '\n') {
-						printf("\t# pushing parameter (%c) '\\n'\n", code->source1->value.charVal);
-						printf("\tsubu\t$sp, $sp, 4\n");
-						printf("\tli\t\t$t0, 10 (%c)\n", code->source1->value.charVal);
-						printf("\tsw\t\t$t0, 0($sp)\n");
-					} else if (code->source1->value.charVal == '\0') {
-						printf("\t# pushing parameter (%c)'\\0'\n", code->source1->value.charVal);
-						printf("\tsubu\t$sp, $sp, 4\n");
-						printf("\tli\t\t$t0, 0 (%c)\n", code->source1->value.charVal);
-						printf("\tsw\t\t$t0, 0($sp)\n");
-					} else {
-						printf("\t# pushing parameter '%c'\n", code->source1->value.charVal);
-						printf("\tsubu\t$sp, $sp, 4\n");
-						printf("\tli\t\t$t0, '%c'\n", code->source1->value.charVal);
-						printf("\tsw\t\t$t0, 0($sp)\n");
-					}
-					
-				} else {
-					printf("\t# pushing parameter %d\n", code->source1->value.intVal);
-					printf("\tsubu\t$sp, $sp, 4\n");
-					printf("\tli\t\t$t0, %d\n", code->source1->value.intVal);
-					printf("\tsw\t\t$t0, 0($sp)\n");
-				}
-				
-			}
-			
-			_offset += 4;
-			break;
-		case DECLARATION_OP:
-			break;
-		default:
-			break;
-	}
-	
-	writeCode(code->next);
-}
-
-void writeExpressionCode(char *mnemonic, char *operator, Code *code) {
-	printf("\n");
-	
-	if (code->source1->location) {
-
-		if (code->source2->location) {
-			
-			printf("\t# %s %s %s\n", code->source2->identifier, operator, code->source1->identifier);
-			
-			if (code->source2->type == CHAR_TYPE) {
-				printf("\tlb\t\t$t1, ");
-			} else if (code->source2->reference) {
-				printf("\tlw\t\t$t1, ");
-			} else {
-				printf("\tlw\t\t$t1, ");
-			}
-			
-			if (_offset != 0 && strncmp(code->source2->location, "_", 1) != 0)
-				printf("%d + %s\n", _offset, code->source2->location);
-			else
-				printf("%s\n", code->source2->location);
-			
-			if (code->source2->type == CHAR_ARRAY)
-				printf("\tlb\t\t$t1, 0($t1)\n");
-			if (code->source2->type == INT_ARRAY)
-				printf("\tlw\t\t$t1, 0($t1)\n");
-				
-		} else {
-			
-			if (code->source2->type == CHAR_TYPE) {
-				if (code->source2->value.charVal == '\n') {
-					printf("\t# '\\n' %s %s\n", operator, code->source1->identifier);
-					printf("\tli\t\t$t1, 10		# 10 is ascii value for '\\n'\n");
-				} else if (code->source2->value.charVal == '\0') {
-					printf("\t# '\\0' %s %s\n", operator, code->source1->identifier);
-					printf("\tli\t\t$t1, 0		# 0 is ascii value for '\\0'\n");
-				} else {
-					printf("\t# '%c' %s %s\n", code->source2->value.charVal, operator, code->source1->identifier);
-					printf("\tli\t\t$t1, '%c'\n", code->source2->value.charVal);
-				}
-			} else {
-				printf("\t# %d %s %s\n", code->source2->value.intVal, operator, code->source1->identifier);
-				printf("\tli\t\t$t1, %d\n", code->source2->value.intVal);
-			}
-				
-		}
-		
-		if (code->source1->type == CHAR_TYPE) {
-			printf("\tlb\t\t$t0, ");
-		} else if (code->source1->reference) {
-			printf("\tlw\t\t$t0, ");
-		} else {
-			printf("\tlw\t\t$t0, ");
-		}
-		
-		if (_offset != 0 && strncmp(code->source1->location, "_", 1) != 0)
-			printf("%d + %s\n", _offset, code->source1->location);
-		else
-			printf("%s\n", code->source1->location);
-		
-		if (code->source1->type == CHAR_ARRAY)
-			printf("\tlb\t\t$t0, 0($t0)\n");
-		if (code->source1->type == INT_ARRAY)
-			printf("\tlw\t\t$t0, 0($t0)\n");
-		
-	} else {
-		
-		if (code->source2->location) {
-			
-			if (code->source1->type == CHAR_TYPE) {
-				if (code->source1->value.charVal == '\n') {
-					printf("\t# %s %s '\\n'\n", code->source2->identifier, operator);
-					printf("\tli\t\t$t0, 10		# 10 is ascii value for '\\n'\n");
-				} else if (code->source1->value.charVal == '\0') {
-					printf("\t# %s %s '\\0'\n", code->source2->identifier, operator);
-					printf("\tli\t\t$t0, 0		# 0 is ascii value for '\\0'\n");
-				} else {
-					printf("\t# %s %s '%c'\n", code->source2->identifier, operator, code->source1->value.charVal);
-					printf("\tli\t\t$t0, '%c'\n", code->source1->value.charVal);
-				}
-			} else {
-				printf("\t# %s %s %d\n", code->source2->identifier, operator, code->source1->value.intVal);
-				printf("\tli\t\t$t0, %d\n", code->source1->value.intVal);
-			}
-			
-			if (code->source2->type == CHAR_TYPE) {
-				printf("\tlb\t\t$t1, ");
-			} else if (code->source2->reference) {
-				printf("\tlw\t\t$t1, ");
-			} else {
-				printf("\tlw\t\t$t1, ");				
-			}
-			
-			if (_offset != 0 && strncmp(code->source2->location, "_", 1) != 0)
-				printf("%d + %s\n", _offset, code->source2->location);
-			else
-				printf("%s\n", code->source2->location);
-			
-			if (code->source2->type == CHAR_ARRAY)
-				printf("\tlb\t\t$t1, 0($t1)\n");
-			if (code->source2->type == INT_ARRAY)
-				printf("\tlw\t\t$t1, 0($t1)\n");
-		
-		} else {
-			
-			printf("\t# %s %s %s\n", code->source2->identifier, operator, code->source1->identifier);
-		
-			if (code->source1->type == CHAR_TYPE) {
-				if (code->source1->value.charVal == '\n') {
-					printf("\tli\t\t$t0, 10		# 10 is ascii value for '\\n'\n");
-				} else if (code->source1->value.charVal == '\0') {
-					printf("\tli\t\t$t0, 0		# 0 is ascii value for '\\0'\n");
-				} else {
-					printf("\tli\t\t$t0, '%c'\n", code->source1->value.charVal);
-				}
-			} else {
-				printf("\tli\t\t$t0, %d\n", code->source1->value.intVal);
-			}
-			
-			if (code->source2->type == CHAR_TYPE) {
-				if (code->source2->value.charVal == '\n') {
-					printf("\tli\t\t$t1, 10		# 10 is ascii value for '\\n'\n");
-				} else if (code->source2->value.charVal == '\0') {
-					printf("\tli\t\t$t1, 0		# 0 is ascii value for '\\0'\n");
-				} else {
-					printf("\tli\t\t$t1, '%c'\n", code->source2->value.charVal);
-				}
-			} else {
-				printf("\tli\t\t$t1, %d\n", code->source2->value.intVal);
-			}
-
-		}
-	}
-	
-	printf("\t%s\t\t$t0, $t1, $t0\n", mnemonic);
-
-	if (code->destination->type == CHAR_TYPE)
-		printf("\tsb\t\t$t0, ");
-	else
-		printf("\tsw\t\t$t0, ");
-		
-	if (_offset != 0 && strncmp(code->destination->location, "_", 1) != 0)
-		printf("%d + %s\n", _offset, code->destination->location);
-	else
-		printf("%s\n", code->destination->location);
-}
-
 /* Function: typeError
  * Parameters: char *errorMessage
  * Description: Called when semantic errors are found. Prints error message and
@@ -2945,7 +2148,7 @@ void writeExpressionCode(char *mnemonic, char *operator, Code *code) {
  */
 void typeError(char *errorMessage) {
 	fprintf(stderr, "TYPE ERROR: line %d: %s\n", yylineno, errorMessage);
-	_generateCode = 0;
+	_generateCode = FALSE;
 }
 
 /* Function: generateNewTempID
@@ -2973,7 +2176,6 @@ void generateNewLabelID() {
  *		required
  *				none
  *		optional
- *				-c (prints three address code)
  *				-t (prints syntax tree)
  *				-s (prints symbol table)
  *				< filename.c (compiles file to intermediate code)
@@ -2990,10 +2192,6 @@ int main(int argc, char **argv) {
 	{
 		switch (c)
 		{
-			case 'c':
-				DEBUG_CODE = 1;
-				break;
-
 			case 't':
 				DEBUG_SYNTAX = 1;
 				break;
@@ -3004,10 +2202,7 @@ int main(int argc, char **argv) {
 				break;
 
 			case '?':
-				if (optopt == 'c')
-					fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-
-				else if (isprint(optopt))
+				if (isprint(optopt))
 					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
 
 				else
@@ -3019,48 +2214,17 @@ int main(int argc, char **argv) {
 				// break;
 		}
 	}
-
 	push_symbolTable_toStack();				// initialize global symbol table
 
 	yyparse();
 	
-	// printf("\n.data\n");
+//	printf("\n.table\n");
 	popTempVariables(_tempVariables);
 	popStringLiterals(_stringLiterals);
 	
 	pop_symbolTable_fromStack();				// free global symbol table
 	
-	// printf("\n.text\n\n");
-	// printf("_print_int:\n");
-	// printf("\tli\t\t$v0, 1\n");
-	// printf("\tlw\t\t$a0, 0($sp)\n");
-	// printf("\tsyscall\n");
-	// printf("\tjr\t\t$ra\n");
-	
-	// printf("\n_print_string:\n");
-	// printf("\tli\t\t$v0, 4\n");
-	// printf("\tlw\t\t$a0, 0($sp)\n");
-	// printf("\tsyscall\n");
-	// printf("\tjr\t\t$ra\n");
-	
-	// printf("\n_read_int:\n");
-	// printf("\tli\t\t$v0, 5\n");
-	// printf("\tsyscall\n");
-	// printf("\tjr\t\t$ra\n");
-	
-	// printf("\n_read_string:\n");
-	// printf("\tli\t\t$v0, 8\n");
-	// printf("\tsyscall\n");
-	// printf("\tlw\t\t$t0, 0($sp)\n");
-	// printf("__read_string_copy:\n");
-	// printf("\tlb\t\t$t1, 0($a0)\n");
-	// printf("\tsb\t\t$t1, 0($t0)\n");
-	// printf("\taddi\t$t0, $t0, 1\n");
-	// printf("\taddi\t$a0, $a0, 1\n");
-	// printf("\tbgtz\t$t1, __read_string_copy\n");
-	// printf("\tjr\t\t$ra\n");
-	
 	if (_generateCode)
-		return 0;
-	return 1;
+		return 0;					// success
+	return 1;						// failure
 }

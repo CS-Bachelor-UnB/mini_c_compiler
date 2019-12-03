@@ -39,7 +39,7 @@ typedef enum FunctionType {
 typedef union Value {
 	int		intVal;			// also used to store the length of arrays
 	char 	charVal;
-	float	floatVal;
+	float   floatVal;
 	char	*strVal;
 } Value;
 
