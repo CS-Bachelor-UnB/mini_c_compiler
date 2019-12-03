@@ -128,7 +128,7 @@ Symbol *insertGlobal(char *identifier, Type type);
  */
 Symbol *addParameter(char *identifier, Type type, Symbol *currentFunction);
 
-/* Function: pushSymbolTable
+/* Function: push_symbolTable_toStack
  * Parameters: void
  * Description: Pushes a new symbol table onto the stack.
  * Returns: void
@@ -136,7 +136,7 @@ Symbol *addParameter(char *identifier, Type type, Symbol *currentFunction);
  */
 void push_symbolTable_toStack();
 
-/* Function: popSymbolTable
+/* Function: pop_symbolTable_fromStack
  * Parameters: void
  * Description: Pops the symbol table on the top of the stack.
  * Returns: void

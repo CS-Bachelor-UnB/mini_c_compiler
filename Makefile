@@ -1,27 +1,32 @@
-SRC_DIR = ./src
-BUILD_DIR = ./build
-INC_DIR = -I ./include
-BIN_DIR = ./bin
-SRC_AUX_DIR = src/aux
-ASSETS_DIR = ./assets
-
-CC = gcc
 CFLAGS = -w
 
+compile: src/scanner.l src/parser.y utilities.o symbolTable.o code.o syntaxTree.o functionCall.o
+	mkdir -p assets/ bin/
+	bison src/parser.y -o src/aux/y.tab.c --defines=include/y.tab.h --report=all --report-file=assets/y.states.out
+	flex -o src/aux/lex.yy.c src/scanner.l
+	gcc $(CFLAGS) src/aux/lex.yy.c src/aux/y.tab.c obj/utilities.o obj/symbolTable.o obj/syntaxTree.o obj/code.o obj/functionCall.o -o bin/compile -I include/
 
-all: 
-	rm -rf $(BUILD_DIR) $(ASSETS_DIR) $(BIN_DIR) || true
-	rm ./src/aux/lex.yy.c ./src/aux/y.tab.c ./include/y.tab.h || true
+utilities.o: src/aux/utilities.c
+	mkdir -p obj/
+	gcc -o obj/$@ $< -c -I include/
+
+symbolTable.o: src/aux/symbolTable.c
+	gcc -o obj/$@ $< -c -I include/
 	
-	mkdir -p $(ASSETS_DIR) $(BIN_DIR)
-	
-	flex -o $(SRC_AUX_DIR)/lex.yy.c $(SRC_DIR)/scanner.l
-	bison $(SRC_DIR)/parser.y -o $(SRC_AUX_DIR)/y.tab.c --defines=./include/y.tab.h --report=all --report-file=$(ASSETS_DIR)/y.states.out
+code.o: src/aux/code.c
+	gcc -o obj/$@ $< -c -I include/
 
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/parser $(wildcard $(SRC_AUX_DIR)/*) $(SRC_AUX_DIR)/lex.yy.c $(SRC_AUX_DIR)/y.tab.c $(INC_DIR)
+syntaxTree.o: src/aux/syntaxTree.c
+	gcc -o obj/$@ $< -c -I include/
 
+functionCall.o: src/aux/functionCall.c
+	gcc -o obj/$@ $< -c -I include/
+
+scanner.lex:
+
+parser.yacc:
 
 .PHONY: clean
 clean:
-	rm -rf $(BUILD_DIR) $(ASSETS_DIR) $(BIN_DIR) || true
+	rm -rf obj/ assets/ bin/ || true
 	rm ./src/aux/lex.yy.c ./src/aux/y.tab.c ./include/y.tab.h || true

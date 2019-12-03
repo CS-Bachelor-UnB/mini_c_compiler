@@ -164,7 +164,7 @@ makeProt:	{
 				      prevDcl->functionType = PROTOTYPE;
 			  }
 			
-			  popSymbolTable();
+			  pop_symbolTable_fromStack();
 			}
 			;
 
@@ -197,7 +197,7 @@ varDcl:	  	  ID
 			
 				if (_currType == CHAR_TYPE)
 					_currType = CHAR_ARRAY;
-				else
+				else if (_currType == INT_TYPE)
 					_currType = INT_ARRAY;
 				else if (_currType == FLOAT_TYPE)
                     _currType = FLOAT_ARRAY;
@@ -399,7 +399,7 @@ insertFunc:	{
 					  currFunction->functionType = DEFINITION;
 			  }
 			
-			  pushSymbolTable();
+			  push_symbolTable_toStack();
 			}
 			;
 
@@ -514,7 +514,7 @@ function:	  type storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl
 
 			  destroyTree(function);
 			  destroyCode(code);
-			  popSymbolTable();
+			  pop_symbolTable_fromStack();
 			}
 			| storeVoid storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl
 				  statementOpt '}' 
@@ -619,7 +619,7 @@ function:	  type storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl
 
 			  destroyTree(function);
 			  destroyCode(code);
-			  popSymbolTable();
+			  pop_symbolTable_fromStack();
 			}
 			;
 
@@ -818,27 +818,28 @@ exprOpt:	  expr { $$.type = $1.type; $$.tree = $1.tree; }
 
 assignment:	  storeID '=' expr
 			{
-			  _currID = $1;
-			  Symbol *currSymbol = recall(_currID);
+				_currID = $1;
+				Symbol *currSymbol = recall(_currID);
 
-			  if (!currSymbol) {
-				  sprintf(_errorMessage, "%s undefined", _currID);
-				  typeError(_errorMessage);
-		  	  } else {
-				  if ((currSymbol->type != INT_TYPE && currSymbol->type != CHAR_TYPE && currSymbol->type != FLOAT_TYPE)
-							|| currSymbol->functionType != NON_FUNCTION) {
-						sprintf(_errorMessage, "%s has incompatible type for assignment",
-							_currID);
-						typeError(_errorMessage);
-					}
+				if (!currSymbol) {
+					sprintf(_errorMessage, "%s undefined", _currID);
+					typeError(_errorMessage);
+				} else {
+					if ((currSymbol->type != INT_TYPE && currSymbol->type != CHAR_TYPE && currSymbol->type != FLOAT_TYPE)
+								|| currSymbol->functionType != NON_FUNCTION) {
+							sprintf(_errorMessage, "%s has incompatible type for assignment",
+								_currID);
+							typeError(_errorMessage);
+						}
 					if (currSymbol->type != $3.type) {
 						if ((currSymbol->type != INT_TYPE && currSymbol->type != CHAR_TYPE && currSymbol->type != FLOAT_TYPE)
 							&& ($3.type != INT_TYPE && $3.type != CHAR_TYPE && $3.type != FLOAT_TYPE)) {
 							sprintf(_errorMessage, "incompatible types for assignment of %s",
 								_currID);
 							typeError(_errorMessage);
+						}
 					}
-			  }
+				}
 			
 			  SyntaxTree *leftHandSide = createTree(SYMBOL, currSymbol, NULL, NULL);
 			  $$ = createTree(ASSIGNMENT, NULL, leftHandSide, $3.tree);
@@ -1351,25 +1352,8 @@ multiExprOpt: multiExprOpt ',' args { $3->left = $1; $$ = $3; }
  * Returns: 0 for success, 1 if errors were found (syntactic or semantic).
  * Preconditions: none
  */
-<<<<<<< src/parser.y
-int main() {
-    push_symbolTable_toStack();				// initialize global symbol table
-
-    yyparse();
-
-    // popTempVariables(_tempVariables);
-    // popStringLiterals(_stringLiterals);
-    pop_symbolTable_fromStack();				// free global symbol table
-
-    if (_parsing_success){
-      printf("Successfully parsed and annotated!\n");
-      return 0;
-    }
-    printf("Error while parsing!\n Error messages printed along the annotated ST above\n");
-    return 1;						// failure
-=======
 main() {
-	pushSymbolTable();				// initialize global symbol table
+	push_symbolTable_toStack();				// initialize global symbol table
 
 	yyparse();
 	
@@ -1377,7 +1361,7 @@ main() {
 	popTempVariables(_tempVariables);
 	popStringLiterals(_stringLiterals);
 	
-	popSymbolTable();				// free global symbol table
+	pop_symbolTable_fromStack();				// free global symbol table
 	
 	printf("\n.text\n\n");
 	printf("_print_int:\n");
@@ -1412,7 +1396,6 @@ main() {
 	if (_generateCode)
 		return 0;					// success
 	return 1;						// failure
->>>>>>> src/parser.y.master
 }
 
 /* Function: insertTempVariable
@@ -1422,7 +1405,6 @@ main() {
  * Preconditions: none
  */
 void insertTempVariable(Symbol *tempVariable) {
-<<<<<<< src/parser.y
     if (!tempVariable)
         return;
 
@@ -1435,20 +1417,6 @@ void insertTempVariable(Symbol *tempVariable) {
 
     newTemp->next = _tempVariables;
     _tempVariables = newTemp;
-=======
-	if (!tempVariable)
-		return;
-	
-	TempVariable *newTemp = NULL;
-	
-	if (!(newTemp = malloc(sizeof(TempVariable))))
-		ERROR(NULL, __LINE__, TRUE);					// out of memory
-		
-	newTemp->symbol = tempVariable;
-	
-	newTemp->next = _tempVariables;
-	_tempVariables = newTemp;
->>>>>>> src/parser.y.master
 }
 
 /* Function: popTempVariables
@@ -1459,13 +1427,6 @@ void insertTempVariable(Symbol *tempVariable) {
  * Preconditions: none
  */
 void popTempVariables(TempVariable *tempVariable) {
-<<<<<<< src/parser.y
-    if (!tempVariable)
-        return;
-
-    popTempVariables(tempVariable->next);
-    free(tempVariable);
-=======
 	if (!tempVariable)
 		return;
 	
@@ -1480,7 +1441,6 @@ void popTempVariables(TempVariable *tempVariable) {
 	
 	popTempVariables(tempVariable->next);
 	free(tempVariable);
->>>>>>> src/parser.y.master
 }
 
 /* Function: insertStringLiteral
@@ -1490,20 +1450,6 @@ void popTempVariables(TempVariable *tempVariable) {
  * Preconditions: none
  */
 void insertStringLiteral(Symbol *stringLiteral) {
-<<<<<<< src/parser.y
-    if (!stringLiteral)
-        return;
-
-    StringLiteral *newStringLiteral = NULL;
-
-    if (!(newStringLiteral = malloc(sizeof(StringLiteral))))
-        ERROR(NULL, __LINE__, TRUE);						// out of memory
-
-    newStringLiteral->symbol = stringLiteral;
-
-    newStringLiteral->next = _stringLiterals;
-    _stringLiterals = newStringLiteral;
-=======
 	if (!stringLiteral)
 		return;
 	
@@ -1516,7 +1462,6 @@ void insertStringLiteral(Symbol *stringLiteral) {
 	
 	newStringLiteral->next = _stringLiterals;
 	_stringLiterals = newStringLiteral;
->>>>>>> src/parser.y.master
 }
 
 /* Function: recallStringLiteral
@@ -1528,21 +1473,6 @@ void insertStringLiteral(Symbol *stringLiteral) {
  * Preconditions: none
  */
 Symbol	*recallStringLiteral(char *targetString) {
-<<<<<<< src/parser.y
-    if (!targetString)
-        return NULL;
-
-    StringLiteral *currString = _stringLiterals;
-
-    while (currString) {
-        if (strcmp(currString->symbol->value.strVal, targetString) == 0)
-            return currString->symbol;
-
-        currString = currString->next;
-    }
-
-    return NULL;
-=======
 	if (!targetString)
 		return NULL;
 	
@@ -1556,7 +1486,6 @@ Symbol	*recallStringLiteral(char *targetString) {
 	}
 	
 	return NULL;
->>>>>>> src/parser.y.master
 }
 
 /* Function: popStringLiterals
@@ -1567,14 +1496,6 @@ Symbol	*recallStringLiteral(char *targetString) {
  * Preconditions: none
  */
 void popStringLiterals(StringLiteral *stringLiteral) {
-<<<<<<< src/parser.y
-    if (!stringLiteral)
-        return;
-
-    popStringLiterals(stringLiteral->next);
-    free(stringLiteral->symbol->value.strVal);
-    free(stringLiteral);
-=======
 	if (!stringLiteral)
 		return;
 	
@@ -1585,24 +1506,10 @@ void popStringLiterals(StringLiteral *stringLiteral) {
 	popStringLiterals(stringLiteral->next);
 	free(stringLiteral->symbol->value.strVal);
 	free(stringLiteral);
->>>>>>> src/parser.y.master
 }
 
 /* Function: yyerror
  * Parameters: char *errorMessage
-<<<<<<< src/parser.y
- * Description: Called when syntax errors are found. Prints error message and flags error.
- * Returns: void
- * Preconditions: none
- */
-void yyerror(char* errorMessage) {
-    fprintf(stderr, "SYNTAX ERROR: line %d: Near token (%s)\n", yylineno, yytext);
-    _parsing_success = FALSE;
-}
-
-int yywrap() {
-    return 1;
-=======
  * Description: Called when syntax errors are found. Prints error message and
  *					turns code generation off.
  * Returns: void
@@ -1660,7 +1567,6 @@ void declareGlobalVariables(SyntaxTree *tree) {
 	
 	declareGlobalVariables(tree->left);
 	declareGlobalVariables(tree->right);
->>>>>>> src/parser.y.master
 }
 
 /* Function: allocateStackSpace
@@ -1670,48 +1576,6 @@ void declareGlobalVariables(SyntaxTree *tree) {
  * Preconditions: On the first call to this function the offset is 0.
  */
 int allocateStackSpace(SyntaxTree *declaration, int offset) {
-<<<<<<< src/parser.y
-    if (!declaration)
-        return offset;
-
-    if (!declaration->symbol
-            || declaration->operation == LITERAL
-            || (declaration->operation != DECLARATION
-            && declaration->operation != FORMAL
-            && strncmp(declaration->symbol->identifier, "_temp", 5) != 0)) {
-        offset = allocateStackSpace(declaration->right, offset);
-        offset = allocateStackSpace(declaration->left, offset);
-        offset = allocateStackSpace(declaration->opt, offset);
-    } else {
-        if (!(declaration->symbol->location = malloc(10 * sizeof(char))))
-            ERROR(NULL, __LINE__, TRUE);							//out of memory
-
-        sprintf(declaration->symbol->location, "%d($sp)", offset);
-
-        //printf("Declaration %s has location %s\n", declaration->symbol->identifier, declaration->symbol->location);
-
-        if (declaration->operation == DECLARATION) {
-
-            if (declaration->symbol->type == CHAR_ARRAY) {
-                offset += declaration->symbol->value.intVal;
-                if (offset % 4 != 0)
-                    offset += 4 - (offset % 4);
-                offset = allocateStackSpace(declaration->left, offset);
-            } else	if (declaration->symbol->type == INT_ARRAY) {
-                offset += 4 * declaration->symbol->value.intVal;
-                offset = allocateStackSpace(declaration->left, offset);
-            } else {
-                offset = allocateStackSpace(declaration->left, offset + 4);
-            }
-
-        } else {
-            offset = allocateStackSpace(declaration->right, offset + 4);
-            offset = allocateStackSpace(declaration->left, offset);
-            offset = allocateStackSpace(declaration->opt, offset);
-        }
-    }
-    return offset;
-=======
 	if (!declaration)
 		return offset;
 	
@@ -3117,7 +2981,6 @@ void writeExpressionCode(char *mnemonic, char *operator, Code *code) {
 		printf("%d + %s\n", _offset, code->destination->location);
 	else
 		printf("%s\n", code->destination->location);
->>>>>>> src/parser.y.master
 }
 
 /* Function: typeError
@@ -3128,13 +2991,8 @@ void writeExpressionCode(char *mnemonic, char *operator, Code *code) {
  * Preconditions: none
  */
 void typeError(char *errorMessage) {
-<<<<<<< src/parser.y
-    fprintf(stderr, "TYPE ERROR: line %d: %s\n", yylineno, errorMessage);
-    _parsing_success = FALSE;
-=======
 	fprintf(stderr, "TYPE ERROR: line %d: %s\n", yylineno, errorMessage);
 	_generateCode = FALSE;
->>>>>>> src/parser.y.master
 }
 
 /* Function: generateNewTempID
@@ -3144,11 +3002,7 @@ void typeError(char *errorMessage) {
  * Preconditions: none
  */
 void generateNewTempID() {
-<<<<<<< src/parser.y
-    sprintf(_tempID, "_temp%d", _tempNum++);
-=======
 	sprintf(_tempID, "_temp%d", _tempNum++);
->>>>>>> src/parser.y.master
 }
 
 /* Function: generateNewLabelID
@@ -3158,9 +3012,5 @@ void generateNewTempID() {
  * Preconditions: none
  */
 void generateNewLabelID() {
-<<<<<<< src/parser.y
-    sprintf(_labelID, "_label%d", _labelNum++);
-=======
 	sprintf(_labelID, "_label%d", _labelNum++);
->>>>>>> src/parser.y.master
 }
