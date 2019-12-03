@@ -1,69 +1,78 @@
 %{
-#include "utilities.h"
-#include "symbolTable.h"
-#include "syntaxTree.h"
-#include "functionCall.h"
+	#include <ctype.h>
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include <unistd.h>
+	#include "utilities.h"
+	#include "symbolTable.h"
+	#include "syntaxTree.h"
+	#include "functionCall.h"
 
-#define DEBUG_SYNTAX
-#define DEBUG_SYMBOLS
+	int DEBUG_ALL = 0;
+	int DEBUG_CODE = 0;
+	int DEBUG_SYNTAX = 0;
+	int DEBUG_SYMBOLS = 0;
 
-typedef struct TempVariable {
-    Symbol *symbol;
-    struct TempVariable *next;
-} TempVariable;
+	int yylex();
+	void yyerror(const char *s);
 
-typedef struct StringLiteral {
-    Symbol 	*symbol;
-    struct StringLiteral *next;
-} StringLiteral;
+	typedef struct TempVariable {
+		Symbol *symbol;
+		struct TempVariable *next;
+	} TempVariable;
 
-/************************
- *						*
- * 		prototypes		*
- *						*
- ************************/
+	typedef struct StringLiteral {
+		Symbol 	*symbol;
+		struct StringLiteral *next;
+	} StringLiteral;
 
-void 	typeError(char *errorMessage),
-		generateNewTempID(),
-		generateNewLabelID(),
-		declareGlobalVariables(SyntaxTree *tree),
-		writeCode(Code *code),
-		insertStringLiteral(Symbol *stringLiteral),
-		popStringLiterals(StringLiteral *stringLiteral),
-		insertTempVariable(Symbol *tempVariable),
-		popTempVariables(TempVariable *tempVariable),
-		writeExpressionCode(char *mnemonic, char *operator, Code *code);
-char	isStringLiteral(Symbol *target);
-int		allocateStackSpace(SyntaxTree *declaration, int offset);
-Symbol	*recallStringLiteral(char *string);
-Code	*constructCode(SyntaxTree *tree);
+	/************************
+	*						*
+	* 		prototypes		*
+	*						*
+	************************/
 
-/************************
- *						*
- *	global variables	*
- *						*
- ************************/
+	void 	typeError(char *errorMessage),
+			generateNewTempID(),
+			generateNewLabelID(),
+			declareGlobalVariables(SyntaxTree *tree),
+			writeCode(Code *code),
+			insertStringLiteral(Symbol *stringLiteral),
+			popStringLiterals(StringLiteral *stringLiteral),
+			insertTempVariable(Symbol *tempVariable),
+			popTempVariables(TempVariable *tempVariable),
+			writeExpressionCode(char *mnemonic, char *operator, Code *code);
+	char	isStringLiteral(Symbol *target);
+	int		allocateStackSpace(SyntaxTree *declaration, int offset);
+	Symbol	*recallStringLiteral(char *string);
+	Code	*constructCode(SyntaxTree *tree);
 
-extern int yylineno;
-extern char *yytext;
-extern FunctionCall	*_callStack;
-char	*_currID = NULL,
-		*_currFID = NULL,
-		_returnedValue = FALSE,
-		_generateCode = TRUE,
-		_errorMessage[255],
-		_tempID[15],				// up to 10 billion temps > unsigned int max
-		_labelID[16];				// up to 10 billion labels > unsigned int max
-unsigned int	_tempNum = 0,
-				_labelNum = 0,
-				_offset = 0,
-				_stackSize = 0;
-Type	_currType = UNKNOWN,
-		_currPType = UNKNOWN;
-FunctionType _currFType = F_UNKNOWN;
-Parameter *_currParam = NULL;
-StringLiteral *_stringLiterals = NULL;
-TempVariable *_tempVariables = NULL;
+	/************************
+	*						*
+	*	global variables	*
+	*						*
+	************************/
+
+	extern int yylineno;
+	extern char *yytext;
+	extern FunctionCall	*_callStack;
+	char	*_currID = NULL,
+			*_currFID = NULL,
+			_returnedValue = 0,
+			_generateCode = 1,
+			_errorMessage[255],
+			_tempID[15],				// up to 10 billion temps > unsigned int max
+			_labelID[16];				// up to 10 billion labels > unsigned int max
+	unsigned int	_tempNum = 0,
+					_labelNum = 0,
+					_offset = 0,
+					_stackSize = 0;
+	Type	_currType = UNKNOWN,
+			_currPType = UNKNOWN;
+	FunctionType _currFType = F_UNKNOWN;
+	Parameter *_currParam = NULL;
+	StringLiteral *_stringLiterals = NULL;
+	TempVariable *_tempVariables = NULL;
 %}
 
 %union {
@@ -429,16 +438,15 @@ function:	  type storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl
 
 			  SyntaxTree *function = createTree(FUNCTION_ROOT, currFunction, $8, $9);
 
-			  printf("\n.text\n\n");
+			//   printf("\n.text\n\n");
 
-			  #if defined(DEBUG_SYNTAX) || defined(DEBUG_ALL)
-			  	  printf("\nSYNTAX TREE:\n\n");
-			  	  printSyntaxTree(function, 0);
-			  #endif
+				if (DEBUG_SYNTAX || DEBUG_ALL) {
+					printf("\nSYNTAX TREE:\n\n");
+					printSyntaxTree(function, 0);
+				}
 
-			  #if defined(DEBUG_SYMBOLS) || defined(DEBUG_ALL)
+			  if (DEBUG_SYMBOLS || DEBUG_ALL) 
 			  	  printSymbolTable();
-			  #endif
 
 			  if (strcmp("main", _currFID) == 0)
 				  printf("main:\n");
@@ -455,7 +463,7 @@ function:	  type storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl
 
 			  SyntaxTree *parameter = $5;
 			  SyntaxTree *parameterName = $5;
-			  int i, j, k, l;
+			  unsigned int i, j, k, l;
 			  i = j = k = l = 0;
 			  for(i = 12, j = 0; parameter; i += 4, j += 4) {
 
@@ -497,20 +505,19 @@ function:	  type storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl
 					  printf("\tsw\t\t$0, %d($sp)\n", _stackSize - i);
 			  }
 
-			  Code *code = constructCode(function);
+				Code *code = constructCode(function);
+				writeCode(code);
 
-			  writeCode(code);
+				if (DEBUG_CODE || DEBUG_ALL) {
+					printf("\nTHREE ADDRESS CODE:\n\n");
+					printCode(code);
+				}
 
-			  #if defined(DEBUG_CODE) || defined(DEBUG_ALL)
-			      printf("\nTHREE ADDRESS CODE:\n\n");
-			      printCode(code);
-			  #endif
-
-			  printf("\n__%sReturn:\n", _currFID);
-			  printf("\tlw\t\t$fp, %d($sp)\n", _stackSize - 8);
-			  printf("\tlw\t\t$ra, %d($sp)\n", _stackSize - 4);
-			  printf("\taddu\t$sp, $sp, %d\n", _stackSize);
-			  printf("\tjr\t\t$ra\n");
+			//   printf("\n__%sReturn:\n", _currFID);
+			//   printf("\tlw\t\t$fp, %d($sp)\n", _stackSize - 8);
+			//   printf("\tlw\t\t$ra, %d($sp)\n", _stackSize - 4);
+			//   printf("\taddu\t$sp, $sp, %d\n", _stackSize);
+			//   printf("\tjr\t\t$ra\n");
 
 			  destroyTree(function);
 			  destroyCode(code);
@@ -534,16 +541,15 @@ function:	  type storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl
 			
 			  SyntaxTree *function = createTree(FUNCTION_ROOT, currFunction, $8, $9);
 			
-			  printf("\n.text\n\n");
+			//   printf("\n.text\n\n");
 			
-			  #if defined(DEBUG_SYNTAX) || defined(DEBUG_ALL)
-			  	  printf("\nSYNTAX TREE:\n\n");
-			  	  printSyntaxTree(function, 0);
-			  #endif
+				if (DEBUG_SYNTAX || DEBUG_ALL) {
+					printf("\nSYNTAX TREE:\n\n");
+					printSyntaxTree(function, 0);
+				}
 
-			  #if defined(DEBUG_SYMBOLS) || defined(DEBUG_ALL)
-			  	  printSymbolTable();
-			  #endif
+				if (DEBUG_SYMBOLS || DEBUG_ALL)
+					printSymbolTable();
 			
 			  if (strcmp("main", _currFID) == 0)
 				  printf("main:\n");
@@ -560,7 +566,7 @@ function:	  type storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl
 			  
 			  SyntaxTree *parameter = $5;
 			  SyntaxTree *parameterName = $5;
-			  int i, j, k, l;
+			  unsigned int i, j, k, l;
 			  i = j = k = l = 0;
 			  for(i = 12, j = 0; parameter; i += 4, j += 4) {
 					
@@ -602,20 +608,19 @@ function:	  type storeFID '(' insertFunc paramTypes ')' '{' multiTypeDcl
 					  printf("\tsw\t\t$0, %d($sp)\n", _stackSize - i);
 			  }
 
-			  Code *code = constructCode(function);
-			
-			  writeCode(code);
+				Code *code = constructCode(function);
+				writeCode(code);
 			  
-			  #if defined(DEBUG_CODE) || defined(DEBUG_ALL)
-			      printf("\nTHREE ADDRESS CODE:\n\n");
-			      printCode(code);
-			  #endif
+				if (DEBUG_CODE || DEBUG_ALL) {
+					printf("\nTHREE ADDRESS CODE:\n\n");
+					printCode(code);
+				}
 			
-			  printf("\n__%sReturn:\n", _currFID);
-			  printf("\tlw\t\t$fp, %d($sp)\n", _stackSize - 8);
-			  printf("\tlw\t\t$ra, %d($sp)\n", _stackSize - 4);
-			  printf("\taddu\t$sp, $sp, %d\n", _stackSize);
-			  printf("\tjr\t\t$ra\n");
+			//   printf("\n__%sReturn:\n", _currFID);
+			//   printf("\tlw\t\t$fp, %d($sp)\n", _stackSize - 8);
+			//   printf("\tlw\t\t$ra, %d($sp)\n", _stackSize - 4);
+			//   printf("\taddu\t$sp, $sp, %d\n", _stackSize);
+			//   printf("\tjr\t\t$ra\n");
 
 			  destroyTree(function);
 			  destroyCode(code);
@@ -1346,58 +1351,6 @@ multiExprOpt: multiExprOpt ',' args { $3->left = $1; $$ = $3; }
 
 %%
 
-/* Function: main
- * Parameters: none
- * Description: Program execution begins here.
- * Returns: 0 for success, 1 if errors were found (syntactic or semantic).
- * Preconditions: none
- */
-main() {
-	push_symbolTable_toStack();				// initialize global symbol table
-
-	yyparse();
-	
-	printf("\n.data\n");
-	popTempVariables(_tempVariables);
-	popStringLiterals(_stringLiterals);
-	
-	pop_symbolTable_fromStack();				// free global symbol table
-	
-	printf("\n.text\n\n");
-	printf("_print_int:\n");
-	printf("\tli\t\t$v0, 1\n");
-	printf("\tlw\t\t$a0, 0($sp)\n");
-	printf("\tsyscall\n");
-	printf("\tjr\t\t$ra\n");
-	
-	printf("\n_print_string:\n");
-	printf("\tli\t\t$v0, 4\n");
-	printf("\tlw\t\t$a0, 0($sp)\n");
-	printf("\tsyscall\n");
-	printf("\tjr\t\t$ra\n");
-	
-	printf("\n_read_int:\n");
-	printf("\tli\t\t$v0, 5\n");
-	printf("\tsyscall\n");
-	printf("\tjr\t\t$ra\n");
-	
-	printf("\n_read_string:\n");
-	printf("\tli\t\t$v0, 8\n");
-	printf("\tsyscall\n");
-	printf("\tlw\t\t$t0, 0($sp)\n");
-	printf("__read_string_copy:\n");
-	printf("\tlb\t\t$t1, 0($a0)\n");
-	printf("\tsb\t\t$t1, 0($t0)\n");
-	printf("\taddi\t$t0, $t0, 1\n");
-	printf("\taddi\t$a0, $a0, 1\n");
-	printf("\tbgtz\t$t1, __read_string_copy\n");
-	printf("\tjr\t\t$ra\n");
-	
-	if (_generateCode)
-		return 0;					// success
-	return 1;						// failure
-}
-
 /* Function: insertTempVariable
  * Parameters: Symbol *tempVariable
  * Description: Adds the given temp variable to the list of temp variables.
@@ -1515,12 +1468,12 @@ void popStringLiterals(StringLiteral *stringLiteral) {
  * Returns: void
  * Preconditions: none
  */
-yyerror(char* errorMessage) {
+void yyerror(const char* errorMessage) {
 	fprintf(stderr, "SYNTAX ERROR: line %d: Near token (%s)\n", yylineno, yytext);
-	_generateCode = FALSE;
+	_generateCode = 0;
 }
 
-yywrap() {
+int yywrap() {
 	return 1;
 }
 
@@ -2693,7 +2646,7 @@ void writeCode(Code *code) {
 			printf("\t# calling %s\n", code->source1->identifier);
 			
 			if (strcmp(code->source1->identifier, "main") == 0)
-				printf("\tjal\t\tmain\n", code->source1->identifier);
+				printf("\tjal\t\tmain\n %s", code->source1->identifier);
 			else
 				printf("\tjal\t\t_%s\n", code->source1->identifier);
 			
@@ -2800,14 +2753,14 @@ void writeCode(Code *code) {
 				
 				if (code->source1->type == CHAR_TYPE) {
 					if (code->source1->value.charVal == '\n') {
-						printf("\t# pushing parameter '\\n'\n", code->source1->value.charVal);
+						printf("\t# pushing parameter (%c) '\\n'\n", code->source1->value.charVal);
 						printf("\tsubu\t$sp, $sp, 4\n");
-						printf("\tli\t\t$t0, 10\n", code->source1->value.charVal);
+						printf("\tli\t\t$t0, 10 (%c)\n", code->source1->value.charVal);
 						printf("\tsw\t\t$t0, 0($sp)\n");
 					} else if (code->source1->value.charVal == '\0') {
-						printf("\t# pushing parameter '\\0'\n", code->source1->value.charVal);
+						printf("\t# pushing parameter (%c)'\\0'\n", code->source1->value.charVal);
 						printf("\tsubu\t$sp, $sp, 4\n");
-						printf("\tli\t\t$t0, 0\n", code->source1->value.charVal);
+						printf("\tli\t\t$t0, 0 (%c)\n", code->source1->value.charVal);
 						printf("\tsw\t\t$t0, 0($sp)\n");
 					} else {
 						printf("\t# pushing parameter '%c'\n", code->source1->value.charVal);
@@ -2992,7 +2945,7 @@ void writeExpressionCode(char *mnemonic, char *operator, Code *code) {
  */
 void typeError(char *errorMessage) {
 	fprintf(stderr, "TYPE ERROR: line %d: %s\n", yylineno, errorMessage);
-	_generateCode = FALSE;
+	_generateCode = 0;
 }
 
 /* Function: generateNewTempID
@@ -3013,4 +2966,101 @@ void generateNewTempID() {
  */
 void generateNewLabelID() {
 	sprintf(_labelID, "_label%d", _labelNum++);
+}
+
+/* Function: main
+ * Parameters: 
+ *		required
+ *				none
+ *		optional
+ *				-c (prints three address code)
+ *				-t (prints syntax tree)
+ *				-s (prints symbol table)
+ *				< filename.c (compiles file to intermediate code)
+ * Description: Program execution begins here.
+ * Returns: 0 for success, 1 if errors were found (syntactic or semantic).
+ * Preconditions: none
+ */
+int main(int argc, char **argv) {
+
+	int c;
+	opterr = 0;
+
+	while ((c = getopt (argc, argv, "cts")) != -1)
+	{
+		switch (c)
+		{
+			case 'c':
+				DEBUG_CODE = 1;
+				break;
+
+			case 't':
+				DEBUG_SYNTAX = 1;
+				break;
+
+			case 's':
+				// DEBUG_SYMBOLS = optarg;
+				DEBUG_SYMBOLS = 1;
+				break;
+
+			case '?':
+				if (optopt == 'c')
+					fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+
+				else if (isprint(optopt))
+					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+
+				else
+					fprintf (stderr, "Unknown option character `\\x%x'.\n", optopt);
+
+				return 1;
+			default:
+				abort ();
+				// break;
+		}
+	}
+
+	push_symbolTable_toStack();				// initialize global symbol table
+
+	yyparse();
+	
+	// printf("\n.data\n");
+	popTempVariables(_tempVariables);
+	popStringLiterals(_stringLiterals);
+	
+	pop_symbolTable_fromStack();				// free global symbol table
+	
+	// printf("\n.text\n\n");
+	// printf("_print_int:\n");
+	// printf("\tli\t\t$v0, 1\n");
+	// printf("\tlw\t\t$a0, 0($sp)\n");
+	// printf("\tsyscall\n");
+	// printf("\tjr\t\t$ra\n");
+	
+	// printf("\n_print_string:\n");
+	// printf("\tli\t\t$v0, 4\n");
+	// printf("\tlw\t\t$a0, 0($sp)\n");
+	// printf("\tsyscall\n");
+	// printf("\tjr\t\t$ra\n");
+	
+	// printf("\n_read_int:\n");
+	// printf("\tli\t\t$v0, 5\n");
+	// printf("\tsyscall\n");
+	// printf("\tjr\t\t$ra\n");
+	
+	// printf("\n_read_string:\n");
+	// printf("\tli\t\t$v0, 8\n");
+	// printf("\tsyscall\n");
+	// printf("\tlw\t\t$t0, 0($sp)\n");
+	// printf("__read_string_copy:\n");
+	// printf("\tlb\t\t$t1, 0($a0)\n");
+	// printf("\tsb\t\t$t1, 0($t0)\n");
+	// printf("\taddi\t$t0, $t0, 1\n");
+	// printf("\taddi\t$a0, $a0, 1\n");
+	// printf("\tbgtz\t$t1, __read_string_copy\n");
+	// printf("\tjr\t\t$ra\n");
+	
+	if (_generateCode)
+		return 0;
+	return 1;
 }
