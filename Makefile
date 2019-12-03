@@ -1,4 +1,4 @@
-CFLAGS = -w
+CFLAGS = -g
 
 compile: src/scanner.l src/parser.y utilities.o symbolTable.o code.o syntaxTree.o functionCall.o
 	mkdir -p assets/ bin/
